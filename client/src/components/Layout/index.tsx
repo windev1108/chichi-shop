@@ -9,11 +9,15 @@ import NavMobile from "@/components/Layout/NavMobile";
 const Layout: NextPage<{
   children: ReactNode;
 }> = ({ children }) => {
+  const chatBoxRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     moment.locale("vi");
   }, []);
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    chatBoxRef.current?.setAttribute("page_id", process.env.NEXT_PUBLIC_PAGE_ID as string);
+    chatBoxRef.current?.setAttribute("attribution", "biz_inbox");
+  }, []);
 
   return (
     <>
@@ -24,8 +28,12 @@ const Layout: NextPage<{
         <link rel="icon" href="./favicon.png" />
       </Head>
       <NavMobile />
-      <div className="absolute bottom-5 rigt-5">
-        <div id="fb-customer-chat" className="fb-customerchat"></div>
+      <div className="absolute bottom-3 right-3 z-[100] shadow-md rounded-full w-20 h-20 bg-white flex justify-center items-center">
+        <div
+          ref={chatBoxRef}
+          id="fb-customer-chat"
+          className="fb-customerchat"
+        ></div>
       </div>
       <div className="relative bg-white w-screen h-screen overflow-y-scroll scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 overflow-x-hidden">
         <Header />

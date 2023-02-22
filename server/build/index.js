@@ -4,11 +4,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 // @ts-ignore
-var users_ts_1 = __importDefault(require("./routes/users.ts"));
+var users_ts_1 = __importDefault(require("./routes/users.js"));
 // @ts-ignore
-var products_ts_1 = __importDefault(require("./routes/products.ts"));
+var products_ts_1 = __importDefault(require("./routes/products.js"));
 // @ts-ignore
-var search_ts_1 = __importDefault(require("./routes/search.ts"));
+var search_ts_1 = __importDefault(require("./routes/search.js"));
 var express_1 = __importDefault(require("express"));
 var cors_1 = __importDefault(require("cors"));
 var dotenv_1 = __importDefault(require("dotenv"));

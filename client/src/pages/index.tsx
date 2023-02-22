@@ -2,8 +2,8 @@ import Layout from "@/components/Layout";
 import ProductItem from "@/components/Items/Product";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper";
-import { unstable_getServerSession as getServerSession } from "next-auth";
-import { Product, Session, User } from "@/utils/types";
+import { getServerSession } from "next-auth";
+import { Product, Session } from "@/utils/types";
 import { GetServerSidePropsContext, NextPage } from "next";
 import { authOptions } from "./api/auth/[...nextauth]";
 import { getSellingAndNewProduct } from "@/lib/products";
@@ -18,7 +18,7 @@ export const getServerSideProps = async ({
   return {
     props: {
       session: session || null,
-      products,
+      products: products || null,
       origin: `${
         req.headers.host?.includes("localhost") ? "http" : "https"
       }://${req.headers.host}`,

@@ -46,7 +46,7 @@ const Header = () => {
   }, [debounceKeywords]);
 
   useLayoutEffect(() => {
-    setCart(JSON.parse(localStorage.getItem("cart")!) || []);
+    setCart(JSON.parse(localStorage.getItem("carts")!) || []);
   }, [isUpdated]);
 
   useLayoutEffect(() => {
@@ -75,19 +75,19 @@ const Header = () => {
 
   const handleTakeAwayItem = (slug: string) => {
     try {
-      const oldCart: Cart[] = JSON.parse(localStorage.getItem("cart")!);
+      const oldCart: Cart[] = JSON.parse(localStorage.getItem("carts")!);
       const foundIndexItem = oldCart?.findIndex((cart) => cart.slug === slug);
       if (foundIndexItem !== -1) {
         if (oldCart[foundIndexItem!].amount! <= 1) {
           localStorage.setItem(
-            "cart",
+            "carts",
             JSON.stringify([...oldCart.filter((cart) => cart.slug !== slug)])
           );
           setCart(oldCart.filter((cart) => cart.slug !== slug));
         } else {
           oldCart[foundIndexItem!].amount =
             oldCart[foundIndexItem!].amount! - 1;
-          localStorage.setItem("cart", JSON.stringify(oldCart));
+          localStorage.setItem("carts", JSON.stringify(oldCart));
           setCart(oldCart);
         }
       }
@@ -98,13 +98,13 @@ const Header = () => {
 
   const handlePlusItem = (slug: string) => {
     try {
-      const oldCards: Cart[] = JSON.parse(localStorage.getItem("cart")!) || [];
+      const oldCards: Cart[] = JSON.parse(localStorage.getItem("carts")!) || [];
       const foundIndexItem = oldCards?.findIndex((cart) => cart.slug === slug);
 
       if (foundIndexItem !== -1) {
         oldCards[foundIndexItem!].amount =
           oldCards[foundIndexItem!].amount! + 1;
-        localStorage.setItem("cart", JSON.stringify(oldCards));
+        localStorage.setItem("carts", JSON.stringify(oldCards));
         setCart(oldCards);
       }
     } catch (error: any) {
@@ -114,7 +114,7 @@ const Header = () => {
 
   const handleClearCart = () => {
     try {
-      localStorage.setItem("cart", JSON.stringify([]));
+      localStorage.setItem("carts", JSON.stringify([]));
       setCart([]);
     } catch (error: any) {
       toast.error(error.message);

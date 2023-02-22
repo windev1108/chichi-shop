@@ -43,7 +43,6 @@ const ProductItem: NextPage<{
         ])
       );
       dispatch(updateCart());
-      toast.success(`Thêm vào giỏ hàng thành công`);
     } else {
       if (oldCards[existingProductIndex].amount! + 1 > 100) {
         toast.error("Không thể thêm quá 100 sản phẩm vào giỏ hàng");
@@ -52,7 +51,6 @@ const ProductItem: NextPage<{
           oldCards[existingProductIndex].amount! + 1;
         localStorage.setItem("carts", JSON.stringify(oldCards));
         dispatch(updateCart());
-        toast.success(`Thêm vào giỏ hàng thành công`);
       }
     }
   }, []);

@@ -3,10 +3,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// @ts-ignore
-var products_ts_1 = require("../controllers/products.ts");
-// @ts-ignore
-var review_ts_1 = require("../controllers/review.ts");
+var products_ts_1 = require("../controllers/products.js");
+var review_ts_1 = require("../controllers/review.js");
 var express_1 = __importDefault(require("express"));
 var router = express_1.default.Router();
 // get products by page

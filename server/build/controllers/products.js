@@ -51,7 +51,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteProductById = exports.updateProductById = exports.createProduct = exports.getProductsByKeyword = exports.getProductBySlug = exports.getSellingAndNewProducts = exports.getProductByPage = exports.getProducts = void 0;
-var constants_1 = require("./../utils/constants");
+var constants_1 = require("./../utils/constants.js");
 var client_1 = require("@prisma/client");
 var slugify_1 = __importDefault(require("slugify"));
 var prisma = new client_1.PrismaClient();

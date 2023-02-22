@@ -1,3 +1,4 @@
+import { formatReviews } from './../utils/constants';
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client"
 import slugify from 'slugify'
@@ -49,6 +50,11 @@ export const getProductByPage = async (req: Request, res: Response): Promise<any
                         price: true,
                     }
                 },
+                reviews: {
+                    select: {
+                        point: true
+                    }
+                },
                 _count: {
                     select: {
                         reviews: true
@@ -56,13 +62,22 @@ export const getProductByPage = async (req: Request, res: Response): Promise<any
                 }
             },
             orderBy: {
-                createdAt: "desc"
+                createdAt: "desc",
             }
         }
         )
-        const countProduct = await prisma.product.count()
 
-        res.status(200).json({ products, page: countProduct / +process.env.MAX_ITEM_IN_PAGE! <= 1 ? 1 : Math.floor(countProduct / +process.env.MAX_ITEM_IN_PAGE!) })
+
+
+        const countProducts = await prisma.product.count()
+        const customProducts = products.map((product) => {
+            return {
+                ...product,
+                averageRating: formatReviews(product.reviews)
+
+            }
+        })
+        res.status(200).json({ products: customProducts, totalPage: countProducts / +process.env.MAX_ITEM_IN_PAGE! <= 1 ? 1 : Math.floor(countProducts / +process.env.MAX_ITEM_IN_PAGE!) })
     } catch (error: any) {
         res.status(500).json({ message: error.message })
     }
@@ -83,6 +98,7 @@ export const getSellingAndNewProducts = async (_req: Request, res: Response): Pr
                     }
                 },
                 sizeList: true,
+                reviews: true,
                 _count: {
                     select: {
                         reviews: true
@@ -103,6 +119,7 @@ export const getSellingAndNewProducts = async (_req: Request, res: Response): Pr
                     }
                 },
                 sizeList: true,
+                reviews: true,
                 _count: {
                     select: {
                         reviews: true
@@ -111,7 +128,19 @@ export const getSellingAndNewProducts = async (_req: Request, res: Response): Pr
             },
         })
 
-        res.status(200).json({ selling, news })
+        res.status(200).json({
+            selling: selling.map((product) => {
+                return {
+                    ...product,
+                    averageRating: formatReviews(product.reviews)
+                }
+            }), news: news.map((product) => {
+                return {
+                    ...product,
+                    averageRating: formatReviews(product.reviews)
+                }
+            })
+        })
     } catch (error) {
         res.status(500).end()
     }
@@ -138,12 +167,27 @@ export const getProductBySlug = async (req: Request, res: Response): Promise<any
                         amount: true,
                         price: true,
                     }
+                },
+                reviews: {
+                    select: {
+                        id: true,
+                        content: true,
+                        point: true,
+                        createdAt: true,
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                image: true,
+                            }
+                        }
+                    }
                 }
             }
         })
 
         if (product) {
-            res.status(200).json({ product })
+            res.status(200).json({ product: { ...product, averageRating: formatReviews(product.reviews) } })
         } else {
             res.status(204).json({ message: "Not found product" })
         }
@@ -160,14 +204,54 @@ export const getProductsByKeyword = async (req: Request, res: Response): Promise
                 name: {
                     contains: keyword as string
                 }
+            },
+            include: {
+                files: {
+                    select: {
+                        url: true,
+                        type: true
+                    },
+                    take: 1
+                },
+                sizeList: {
+                    select: {
+                        price: true
+                    },
+                    take: 1,
+                    orderBy: {
+                        price: "desc"
+                    }
+                },
+                reviews: {
+                    select: {
+                        point: true
+                    }
+                },
+                _count: {
+                    select: {
+                        reviews: true
+                    }
+                }
             }
         })
 
-        if (products.length > 0) {
-            res.status(200).json({ products })
-        } else {
-            res.status(204).json({ message: "Not found any product" })
-        }
+        const countProducts = await prisma.product.count({
+            where: {
+                name: {
+                    contains: keyword as string
+                }
+            },
+        })
+
+        res.status(200).json({
+            products: products.map((product) => {
+                return {
+                    ...product,
+                    averageRating: formatReviews(product.reviews)
+
+                }
+            }), totalPage: countProducts / +process.env.MAX_ITEM_IN_PAGE! <= 1 ? 1 : Math.floor(countProducts / +process.env.MAX_ITEM_IN_PAGE!)
+        })
     } catch (error) {
         res.status(500).end()
     }
@@ -240,6 +324,12 @@ export const updateProductById = async (req: Request, res: Response): Promise<an
                     slug: slugify(name, {
                         lower: true
                     }),
+                    sizeList: {
+                        deleteMany: {},
+                        createMany: {
+                            data: sizeList
+                        }
+                    },
                 },
                 select: {
                     id: true
@@ -252,18 +342,12 @@ export const updateProductById = async (req: Request, res: Response): Promise<an
                 data: files
             })
 
-            sizeList.length > 0 && await prisma.size.updateMany({
-                where: {
-                    productId: product.id
-                },
-                data: sizeList
-            })
             res.status(200).json({ message: "Cập nhật sản phẩm thành công", success: true })
 
         }
 
-    } catch (error) {
-        res.status(500).end()
+    } catch (error: any) {
+        res.status(500).json({ message: error.message })
     }
 }
 
@@ -276,7 +360,7 @@ export const deleteProductById = async (req: Request, res: Response): Promise<an
         })
 
         res.status(200).json({ product })
-    } catch (error) {
-        res.status(500).end()
+    } catch (error: any) {
+        res.status(500).json({ message: error.message })
     }
 } 

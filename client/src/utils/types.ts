@@ -12,7 +12,10 @@ export interface User {
     name?: string
     email?: string
     password?: string
-    image: any
+    image?: File
+    address?: string,
+    phone?: number
+    gender?: string
     isAdmin?: boolean
 }
 
@@ -27,6 +30,7 @@ export interface Product {
     slug?: String
     files: File[]
     updatedAt?: string
+    averageRating?: number
     reviews?: Review[]
     _count?: {
         reviews?: number
@@ -42,11 +46,13 @@ export interface Size {
 
 
 export interface Review {
-    id: string
+    id?: string
     content: string
     point: number
-    product: Product
-    user: User
+    product?: Product
+    createdAt?: string
+    user?: User
+    userId?: string
 }
 
 export interface File {
@@ -56,3 +62,10 @@ export interface File {
     type: string
 }
 
+
+export interface Cart {
+    slug?: string
+    name?: string
+    image?: string
+    amount?: number
+}

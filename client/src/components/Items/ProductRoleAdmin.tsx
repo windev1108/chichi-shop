@@ -26,8 +26,7 @@ const ProductRoleAdmin: NextPage<{
   discount: number;
   review: number;
   sold: number;
-  isAdmin: boolean;
-}> = ({ id, slug, files, price, discount, name, sold, review, isAdmin }) => {
+}> = ({ id, slug, files, price, discount, name, sold, review }) => {
   const [isLoading, setIsLoading] = useState<boolean>();
   const router = useRouter();
 
@@ -44,52 +43,50 @@ const ProductRoleAdmin: NextPage<{
   }, [id]);
 
   return (
-    <div className="group hover:shadow-lg hover:-translate-y-1 shadow-md border relative flex flex-col h-full cursor-pointer rounded-lg  transition-all duration-500">
-      {isAdmin && (
-        <div className="group-hover:flex hidden space-x-2 justify-center items-center absolute top-0 right-0 bottom-0 left-0 bg-[#11111170] z-[10]">
+    <div className="group hover:shadow-lg hover:-translate-y-1 shadow-md border relative flex flex-col h-fit cursor-pointer rounded-lg  transition-all duration-500">
+      <div className="group-hover:flex hidden space-x-2 justify-center items-center absolute top-0 right-0 bottom-0 left-0 bg-[#11111170] z-[10]">
+        <button
+          disabled={isLoading}
+          onClick={handleDeleteProduct}
+          title="Xóa"
+          className={`${
+            isLoading ? "cursor-not-allowed" : "cursor-pointer"
+          } px-4 py-2 rounded-lg text-red-500 bg-white hover:bg-gray-300`}
+        >
+          {isLoading ? (
+            <AiOutlineLoading3Quarters className="text-blue-500 animate-spin duration-500 ease-linear" />
+          ) : (
+            <AiFillDelete />
+          )}
+        </button>
+        <Link href={`${router.pathname}?slug=${slug}`}>
           <button
             disabled={isLoading}
-            onClick={handleDeleteProduct}
-            title="Xóa"
+            title="Sửa"
             className={`${
               isLoading ? "cursor-not-allowed" : "cursor-pointer"
-            } px-4 py-2 rounded-lg text-red-500 bg-white hover:bg-gray-300`}
+            } px-4 py-2 rounded-lg text-blue-500 bg-white hover:bg-gray-300`}
           >
-            {isLoading ? (
-              <AiOutlineLoading3Quarters className="text-blue-500 animate-spin duration-500 ease-linear" />
-            ) : (
-              <AiFillDelete />
-            )}
+            <FiEdit />
           </button>
-          <Link href={`${router.pathname}?slug=${slug}`}>
-            <button
-              disabled={isLoading}
-              title="Sửa"
-              className={`${
-                isLoading ? "cursor-not-allowed" : "cursor-pointer"
-              } px-4 py-2 rounded-lg text-blue-500 bg-white hover:bg-gray-300`}
-            >
-              <FiEdit />
-            </button>
-          </Link>
-          <Link href={`/products/${slug}`}>
-            <button
-              disabled={isLoading}
-              title="Xem"
-              className={`${
-                isLoading ? "cursor-not-allowed" : "cursor-pointer"
-              } px-4 py-2 rounded-lg text-green-500 bg-white hover:bg-gray-300`}
-            >
-              <GrView />
-            </button>
-          </Link>
-        </div>
-      )}
+        </Link>
+        <Link href={`/products/${slug}`}>
+          <button
+            disabled={isLoading}
+            title="Xem"
+            className={`${
+              isLoading ? "cursor-not-allowed" : "cursor-pointer"
+            } px-4 py-2 rounded-lg text-green-500 bg-white hover:bg-gray-300`}
+          >
+            <GrView />
+          </button>
+        </Link>
+      </div>
       <Link href={`/products/${slug}`}>
         <>
           {discount > 0 && (
-            <div className="absolute top-0 right-0 w-12 h-12 bg-yellow-500 flex justify-center items-center ">
-              <span className="font-semibold text-white">{`-${discount}%`}</span>
+            <div className="absolute top-0 right-0 lg:w-12 w-10 lg:h-12 h-10 bg-yellow-500 flex justify-center items-center ">
+              <span className="font-semibold text-white lg:text-base text-sm">{`-${discount}%`}</span>
             </div>
           )}
           <div className="h-[60%]">
@@ -109,7 +106,7 @@ const ProductRoleAdmin: NextPage<{
               />
             )}
           </div>
-          <div className="h-[40%] px-4 py-2 flex flex-col space-y-2 justify-between">
+          <div className="h-[40%] lg:px-4 px-2 py-2 flex flex-col space-y-2 justify-between">
             <span className="text-gray-500 line-through text-sm">
               {discount > 0 &&
                 currencyFormatter.format(price, {
@@ -126,22 +123,22 @@ const ProductRoleAdmin: NextPage<{
                 })}
               </h1>
             </span>
-            <h1 className="font-semibold text-sm text-black truncate">
+            <h1 className="font-semibold lg:text-sm text-xs text-black truncate">
               {name}
             </h1>
             <div className="flex space-x-2 justify-between">
-              <div className="flex space-x-1 text-sm text-yellow-500 items-center">
+              <div className="flex space-x-1 lg:text-sm text-xs text-yellow-500 items-center">
                 <AiFillStar />
                 <AiFillStar />
                 <AiFillStar />
                 <AiFillStar />
                 <AiFillStar />
               </div>
-              <span className="font-semibold text-sm whitespace-nowrap">{`(${review} đánh giá)`}</span>
+              <span className="font-semibold lg:text-sm text-xs whitespace-nowrap">{`(${review} đánh giá)`}</span>
             </div>
             <div className="flex justify-between">
               <BiShoppingBag className="text-green-600" size={20} />
-              <span className="text-sm font-semibold text-black">{`Đá bán ${
+              <span className="lg:text-sm text-xs font-semibold text-black">{`Đá bán ${
                 sold || 0
               }`}</span>
             </div>

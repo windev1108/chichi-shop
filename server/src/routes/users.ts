@@ -1,5 +1,5 @@
 // @ts-ignore
-import { createUser, deleteUserById, getUserByEmail, getUsers, updateUserById } from '../controllers/users.ts'
+import { createUser, deleteUserById, getUserById, getUsers, updateUserById } from '../controllers/users.ts'
 import express from 'express'
 
 const router = express.Router()
@@ -9,7 +9,7 @@ const router = express.Router()
 router.get('/', getUsers)
 
 // get user by id
-router.get('/:email', getUserByEmail)
+router.get('/:id', getUserById)
 
 // add user
 router.post('/', createUser)

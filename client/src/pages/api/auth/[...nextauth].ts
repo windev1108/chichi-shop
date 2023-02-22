@@ -14,10 +14,24 @@ export const authOptions: NextAuthOptions = {
                     email: string;
                     password: string;
                 };
-                const user = await prisma.user.findFirst({
+                const user  = await prisma.user.findUnique({
                     where: {
                         email,
                     },
+                     select: {
+                        id: true ,
+                        name: true,
+                        email: true,
+                        isAdmin: true,
+                        password: true,
+                        image: {
+                            select: {
+                                url: true,
+                                type: true,
+                                publicId: true
+                            }
+                        }
+                     }
                 })
 
                 if (!user) {
@@ -28,11 +42,13 @@ export const authOptions: NextAuthOptions = {
                     throw new Error("Mật khẩu của bạn không chính xác");
                 }
 
+
                 return {
                     id: user.id as string,
-                    email: user.email as string,
                     name: user.name as string,
-                    image: JSON.stringify({ image: user.image as string, isAdmin: user.isAdmin }),
+                    email: JSON.stringify(user.email as string),
+                    image: user.image?.url || "" as string ,
+                    isAdmin: user?.isAdmin as boolean
                 }
             },
         }),

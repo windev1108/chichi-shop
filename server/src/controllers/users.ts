@@ -14,17 +14,35 @@ export const getUsers = async (_req: Request, res: Response): Promise<any> => {
     }
 }
 
-export const getUserByEmail = async (req: Request, res: Response): Promise<any> => {
+export const getUserById = async (req: Request, res: Response): Promise<any> => {
     try {
         const user = await prisma.user.findUnique({
             where: {
-                email: req.params.email
+                id: req.params.id
+            },
+            select: {
+                id: true,
+                name: true,
+                address: true,
+                email: true,
+                gender: true,
+                password: true,
+                phone: true,
+                isAdmin: true,
+                createdAt: true,
+                image: {
+                    select: {
+                        url: true,
+                        type: true,
+                        publicId: true
+                    }
+                }
             }
         })
         if (user) {
             res.status(200).json({ user })
         } else {
-            res.status(204).json({ message: "Not found user" })
+            res.status(204).json({ user: null, message: "Not found user" })
         }
     } catch (error) {
         res.status(500).end()
@@ -56,16 +74,42 @@ export const createUser = async (req: Request, res: Response): Promise<any> => {
 
 export const updateUserById = async (req: Request, res: Response): Promise<any> => {
     try {
-        const user = await prisma.user.update({
-            where: {
-                id: req.params.id
-            },
-            data: req.body
-        })
+        const { name, password, gender, address, phone, image } = req.body
+        if (image) {
+            await prisma.user.update({
+                where: {
+                    id: req.params.id
+                },
+                data: {
+                    name,
+                    password,
+                    gender,
+                    address,
+                    phone,
+                    image: {
+                        create: image
+                    }
+                }
+            })
+            res.status(200).json({ message: "Cập nhật thông tin thành công", success: true })
+        } else {
+            await prisma.user.update({
+                where: {
+                    id: req.params.id
+                },
+                data: {
+                    name,
+                    password,
+                    gender,
+                    address,
+                    phone,
+                }
+            })
+            res.status(200).json({ message: "Cập nhật thông tin thành công", success: true })
+        }
 
-        res.status(200).json({ user })
-    } catch (error) {
-        res.status(500).end()
+    } catch (error: any) {
+        res.status(500).json({ message: error.message })
     }
 }
 
@@ -76,9 +120,12 @@ export const deleteUserById = async (req: Request, res: Response): Promise<any> 
                 id: req.params.id
             }
         })
-
-        res.status(200).json({ user })
-    } catch (error) {
-        res.status(500).end()
+        if (user) {
+            res.status(200).json({ message: "Xóa người dùng thành công", success: true })
+        } else {
+            res.status(200).json({ message: "Xóa người dùng thất bại", success: false })
+        }
+    } catch (error: any) {
+        res.status(500).json({ message: error.message })
     }
 } 

@@ -55,7 +55,10 @@ model User {
   email         String    @unique
   name          String?   @db.Text
   password      String?   @db.Text
-  image         String?
+  image         File?
+  phone         Int?      @db.Int
+  gender        String?   @db.Text
+  address       String?   @db.Text
   isAdmin       Boolean?  @default(false)
   createdAt     DateTime? @default(now())
   updatedAt     DateTime? @updatedAt
@@ -88,19 +91,23 @@ model File {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String? @unique
   productId String?
 
   @@index([productId])
 }
 
 model Review {
-  id        String  @id @default(cuid())
+  id        String   @id @default(cuid())
   content   String
   point     Int
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   productId String
   userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([productId])

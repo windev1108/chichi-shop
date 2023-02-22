@@ -7,6 +7,7 @@ import { Product, Session, User } from "@/utils/types";
 import { GetServerSidePropsContext, NextPage } from "next";
 import { authOptions } from "./api/auth/[...nextauth]";
 import { getSellingAndNewProduct } from "@/lib/products";
+import { useEffect, useState } from "react";
 
 export const getServerSideProps = async ({
   req,
@@ -16,7 +17,7 @@ export const getServerSideProps = async ({
   const products = await getSellingAndNewProduct();
   return {
     props: {
-      session,
+      session: session || null,
       products,
       origin: `${
         req.headers.host?.includes("localhost") ? "http" : "https"
@@ -31,21 +32,38 @@ const Home: NextPage<{
     selling: Product[];
   };
 }> = ({ products: { selling, news } }) => {
-  console.log("selling , ", selling);
-  console.log("news , ", news);
+  const [ sliderPerView , setSliderView ] = useState<number>(6);
+
+  useEffect(() => {
+    function handleResize() {
+      if(window.innerWidth <= 414){
+        setSliderView(2)
+      }else if(window.innerWidth <= 820){
+        setSliderView(4)
+      }else{
+        setSliderView(6)
+      }
+    }
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
   return (
     <Layout>
-      <div className="px-40">
+      <div className="relative lg:px-40 md:px-10 px-4 lg:py-20 py-16">
         <img
           src="https://tinhlamjw.com/wp-content/uploads/2021/10/NguPhucTinhLam-bannerweb.jpg"
-          className="my-10 object-fill w-full h-[50vh] rounded-xl"
+          className="lg:my-10 my-4 lg:object-fill object-fill w-full lg:h-[50vh] h-[25vh] rounded-xl"
           alt=""
         />
         <div className="flex flex-col">
-          <h1 className="font-semibold text-xl">Sản phẩm bán chạy</h1>
-          <div className="h-[380px] my-10">
+          <h1 className="font-semibold lg:text-xl text-base">Sản phẩm bán chạy</h1>
+          <div className="lg:h-[380px] h-fit lg:my-10 my-4">
             <Swiper
-              slidesPerView={6}
+              slidesPerView={sliderPerView}
               spaceBetween={10}
               navigation={true}
               modules={[Navigation]}
@@ -60,6 +78,7 @@ const Home: NextPage<{
                   discount,
                   sold,
                   sizeList,
+                  averageRating,
                   _count,
                 }) => (
                   <SwiperSlide key={id as string}>
@@ -72,6 +91,7 @@ const Home: NextPage<{
                       discount={discount!}
                       price={sizeList[0].price!}
                       sold={sold!}
+                      averageRating={averageRating!}
                       review={_count?.reviews!}
                     />
                   </SwiperSlide>
@@ -80,17 +100,27 @@ const Home: NextPage<{
             </Swiper>
           </div>
 
-          <h1 className="font-semibold text-xl">Sản phẩm mới</h1>
-          <div className="h-[380px] my-10">
+          <h1 className="font-semibold lg:text-xl text-base">Sản phẩm mới</h1>
+          <div className="lg:h-[380px] h-fit lg:my-10 my-4">
             <Swiper
-              slidesPerView={6}
+              slidesPerView={sliderPerView}
               spaceBetween={10}
               navigation={true}
               modules={[Navigation]}
               className="h-full"
             >
               {news.map(
-                ({ slug, files, id, name, discount, sold, sizeList }) => (
+                ({
+                  slug,
+                  files,
+                  id,
+                  name,
+                  discount,
+                  sold,
+                  sizeList,
+                  averageRating,
+                  _count,
+                }) => (
                   <SwiperSlide key={id as string}>
                     <ProductItem
                       key={slug as string}
@@ -101,7 +131,8 @@ const Home: NextPage<{
                       discount={discount!}
                       price={sizeList[0].price!}
                       sold={sold!}
-                      review={39}
+                      averageRating={averageRating!}
+                      review={_count?.reviews!}
                     />
                   </SwiperSlide>
                 )

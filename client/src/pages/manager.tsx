@@ -4,7 +4,12 @@ import { GetServerSidePropsContext, NextPage } from "next";
 import { unstable_getServerSession as getServerSession } from "next-auth";
 import React, { useRef, useState } from "react";
 import { authOptions } from "./api/auth/[...nextauth]";
-import { destroyMultipleImage, uploadMultipleImage } from "@/utils/constants";
+import {
+  destroyMultipleImage,
+  formatText,
+  formatTextRendering,
+  uploadMultipleImage,
+} from "@/utils/constants";
 import { toast } from "react-hot-toast";
 import { IoIosAddCircle } from "react-icons/io";
 import { RiImageAddFill } from "react-icons/ri";
@@ -19,6 +24,7 @@ import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
 import ProductRoleAdmin from "@/components/Items/ProductRoleAdmin";
 import Link from "next/link";
+import { getUserById } from "@/lib/users";
 
 export const getServerSideProps = async ({
   req,
@@ -26,16 +32,17 @@ export const getServerSideProps = async ({
   query,
 }: GetServerSidePropsContext) => {
   const session: any = await getServerSession(req, res, authOptions);
-  const { products, page } = await getProductsByPage({
+  const { products, totalPage } = await getProductsByPage({
     page: query.page as string,
   });
 
   const { product } = await getProductBySlug({ slug: query.slug as string });
+  const { user } = await getUserById({id: session?.user?.id})
 
-  if (!session?.user.email || !JSON.parse(session?.user?.image!).isAdmin) {
+  if (!session?.user || !user.isAdmin) {
     return {
       redirect: {
-        destination: "/",
+        destination: "/404",
         permanent: true,
       },
       props: {},
@@ -45,7 +52,7 @@ export const getServerSideProps = async ({
   return {
     props: {
       session,
-      page: page || null,
+      totalPage: totalPage || null,
       queryPage: query.page || null,
       products: products || null,
       product: product || null,
@@ -59,10 +66,9 @@ export const getServerSideProps = async ({
 const Manager: NextPage<{
   products: Product[];
   product: Product;
-  page: number;
+  totalPage: number;
   queryPage: string;
-}> = ({ products, page, product, queryPage }) => {
-  const { data: session } = useSession();
+}> = ({ products, totalPage, product, queryPage }) => {
   const router = useRouter();
   const [form, setForm] = useState<{
     name: string;
@@ -70,40 +76,35 @@ const Manager: NextPage<{
     discount: number;
     blobFiles: { url?: string; type?: string; file?: any }[];
     isLoading?: boolean;
-    sizeSlot?: number;
+    sizeSlot?: {
+      id?: number | string;
+      amount?: number;
+      price?: number;
+      name?: string;
+    }[];
   }>({
     name: "",
     descriptions: "",
     discount: 0,
     blobFiles: [],
-    sizeSlot: 0,
+    sizeSlot: [],
     isLoading: false,
   });
   const { name, descriptions, discount, blobFiles, sizeSlot, isLoading } = form;
   const formRef = useRef<HTMLFormElement | any>(null);
 
-  const onSubmitForm = React.useCallback(
+  const handleAddProduct = React.useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
       try {
-        if (!name || sizeSlot === 0 || blobFiles.length === 0) {
+        if (!name || sizeSlot?.length === 0 || blobFiles.length === 0) {
           toast.error("Vui lòng nhập đầy đủ thông tin");
         } else {
-          const sizeProduct = Array.from({ length: sizeSlot! }).map(
-            (_size, index) => {
-              return {
-                name: formRef.current[`size-[${index}]`]?.value as string,
-                price: +formRef.current[`price-[${index}]`]?.value,
-                amount: +formRef.current[`amount-[${index}]`]?.value,
-                isValid: Boolean(
-                  formRef.current[`size-[${index}]`]?.value &&
-                    formRef.current[`price-[${index}]`]?.value &&
-                    formRef.current[`amount-[${index}]`]?.value
-                ),
-              };
-            }
-          );
-          if (sizeProduct.every((size) => size.isValid)) {
+          if (
+            sizeSlot?.every((size) => size.name) &&
+            sizeSlot?.every((size) => size.amount) &&
+            sizeSlot?.every((size) => size.price)
+          ) {
             setForm({ ...form, isLoading: true });
             const files: any = await uploadMultipleImage(blobFiles as any);
             const { success, message } = await createProduct({
@@ -112,7 +113,7 @@ const Manager: NextPage<{
                 discount,
                 descriptions,
                 files,
-                sizeList: sizeProduct.map(({ name, amount, price }) => {
+                sizeList: sizeSlot.map(({ name, amount, price }) => {
                   return {
                     name,
                     amount,
@@ -128,7 +129,7 @@ const Manager: NextPage<{
                 descriptions: "",
                 discount: 0,
                 blobFiles: [],
-                sizeSlot: 0,
+                sizeSlot: [],
                 isLoading: false,
               });
               toast.success(message);
@@ -144,7 +145,7 @@ const Manager: NextPage<{
         toast.error(error.message);
       }
     },
-    [name, blobFiles]
+    [name, discount, descriptions, blobFiles, sizeSlot]
   );
 
   const onChangeFile = (e: any) => {
@@ -163,28 +164,18 @@ const Manager: NextPage<{
     }
   };
 
-  const onEditProduct = React.useCallback(
+  const handleEditProduct = React.useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
       try {
-        if (!name || sizeSlot === 0 || blobFiles.length === 0) {
+        if (!name || sizeSlot?.length === 0 || blobFiles.length === 0) {
           toast.error("Vui lòng nhập đầy đủ thông tin");
         } else {
-          const sizeProduct = Array.from({ length: sizeSlot! }).map(
-            (_size, index) => {
-              return {
-                name: formRef.current[`size-[${index}]`]?.value as string,
-                price: +formRef.current[`price-[${index}]`]?.value,
-                amount: +formRef.current[`amount-[${index}]`]?.value,
-                isValid: Boolean(
-                  formRef.current[`size-[${index}]`]?.value &&
-                    formRef.current[`price-[${index}]`]?.value &&
-                    formRef.current[`amount-[${index}]`]?.value
-                ),
-              };
-            }
-          );
-          if (sizeProduct.every((size) => size.isValid)) {
+          if (
+            sizeSlot?.every((size) => size.name) &&
+            sizeSlot?.every((size) => size.amount) &&
+            sizeSlot?.every((size) => size.price)
+          ) {
             setForm({ ...form, isLoading: true });
             const files: any[] = blobFiles.every((blob) => blob.file)
               ? await uploadMultipleImage(blobFiles as any)
@@ -194,9 +185,9 @@ const Manager: NextPage<{
               product: {
                 name,
                 discount,
-                descriptions,
+                descriptions: formatText({ text: descriptions }),
                 files,
-                sizeList: sizeProduct.map(({ name, amount, price }) => {
+                sizeList: sizeSlot.map(({ name, amount, price }) => {
                   return {
                     name,
                     amount,
@@ -212,11 +203,11 @@ const Manager: NextPage<{
                 descriptions: "",
                 discount: 0,
                 blobFiles: [],
-                sizeSlot: 0,
+                sizeSlot: [],
                 isLoading: false,
               });
               toast.success(message);
-              router.replace(router.asPath);
+              router.replace(router.pathname);
               if (blobFiles.every((blob) => blob.file)) {
                 destroyMultipleImage(product.files);
               }
@@ -231,7 +222,7 @@ const Manager: NextPage<{
         toast.error(error.message);
       }
     },
-    [product]
+    [product, name, discount, descriptions, blobFiles, sizeSlot]
   );
 
   const handleClearFiles = React.useCallback(() => {
@@ -242,7 +233,7 @@ const Manager: NextPage<{
   }, [blobFiles, sizeSlot]);
 
   const handleClearSize = React.useCallback(() => {
-    setForm({ ...form, sizeSlot: 0 });
+    setForm({ ...form, sizeSlot: [] });
   }, [form]);
 
   React.useEffect(() => {
@@ -254,35 +245,42 @@ const Manager: NextPage<{
   }, []);
 
   React.useLayoutEffect(() => {
-    if (product && formRef.current) {
+    if (product) {
       setForm({
         name: product.name as string,
-        descriptions: product.descriptions as string,
+        descriptions: formatTextRendering({ text: product.descriptions }),
         discount: product.discount!,
         blobFiles: product.files!,
-        sizeSlot: product.sizeList.length,
+        sizeSlot: product.sizeList.map((size, index) => {
+          return {
+            ...size,
+            id: index + 1,
+          };
+        }),
       });
     }
   }, [product]);
 
-  console.log("product", product);
+
   return (
     <Layout>
-      <div className="grid grid-cols-10 gap-16 my-10 px-40">
-        <div className="col-span-3">
+      <div className="grid grid-cols-10 lg:gap-16 my-10 lg:px-40 px-4 lg:py-20 py-10">
+        <div className="lg:col-span-3 col-span-10">
           <h1 className="text-center font-semibold text-xl mb-10">
             Thêm sản phẩm
           </h1>
           <form
             ref={formRef}
-            onSubmit={(e) => (product ? onEditProduct(e) : onSubmitForm(e))}
+            onSubmit={(e) =>
+              product ? handleEditProduct(e) : handleAddProduct(e)
+            }
             className="space-y-4 w-full"
           >
             <div className="flex flex-col">
               <label className="font-semibold my-2" htmlFor="name">
                 Tên sản phẩm
                 <span className="inline-block mx-2 text-xs font-normal text-red-500">
-                  (Require*)
+                  (Required*)
                 </span>
               </label>
               <textarea
@@ -298,13 +296,13 @@ const Manager: NextPage<{
               <label className="font-semibold my-2" htmlFor="name">
                 Giảm giá %
                 <span className="inline-block mx-2 text-xs font-normal text-gray-500">
-                  (Optional*)
+                  (Optional)
                 </span>
               </label>
               <input
                 value={discount}
                 onChange={(e) =>
-                  setForm({ ...form, discount: +e.target.value })
+                  setForm({ ...form, discount: parseInt(e.target.value) })
                 }
                 className="border outline-none w-full px-4 py-2 rounded-sm"
                 type="number"
@@ -316,15 +314,16 @@ const Manager: NextPage<{
               <label className="font-semibold my-2" htmlFor="name">
                 Mô tả sản phẩm
                 <span className="inline-block mx-2 text-xs font-normal text-gray-500">
-                  (Optional*)
+                  (Optional)
                 </span>
               </label>
               <textarea
                 value={descriptions}
+                rows={5}
                 onChange={(e) =>
                   setForm({ ...form, descriptions: e.target.value })
                 }
-                className=" border outline-none w-full px-4 py-2 rounded-sm"
+                className=" border outline-none w-full px-4 py-2 rounded-sm scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
                 placeholder="Nhập mô tả sản phẩm"
               />
             </div>
@@ -334,13 +333,19 @@ const Manager: NextPage<{
                 <label className="font-semibold text-black">
                   Thêm Size
                   <span className="inline-block mx-2 text-xs font-normal text-red-500">
-                    (Require*)
+                    (Required*)
                   </span>
                 </label>
                 <button
                   onClick={() => {
-                    if (sizeSlot! < 6) {
-                      setForm({ ...form, sizeSlot: sizeSlot! + 1 });
+                    if (sizeSlot?.length! < 6) {
+                      setForm({
+                        ...form,
+                        sizeSlot: [
+                          ...sizeSlot!,
+                          { id: `${sizeSlot?.length! + 1}` },
+                        ],
+                      });
                     } else {
                       toast.error("Không thể thêm quá 6 kích thước");
                     }
@@ -360,29 +365,41 @@ const Manager: NextPage<{
               </button>
             </div>
             <div className="grid grid-cols-3 gap-4">
-              {Array.from({ length: sizeSlot! }).map((_type, index) => (
+              {sizeSlot?.map((size, index) => (
                 <div
                   key={index!}
                   className={"relative cursor-pointer items-center"}
                 >
                   <input
-                    name={`size-[${index}]`}
+                    onChange={({ target }) => {
+                      sizeSlot[index].name = target.value;
+                      setForm({ ...form });
+                    }}
+                    value={size.name}
                     autoComplete="off"
                     type="text"
                     placeholder="Size"
                     className="w-full px-4 py-2 border text-center outline-none text-sm font-semibold"
                   />
                   <input
-                    name={`price-[${index}]`}
+                    onChange={({ target }) => {
+                      sizeSlot[index].price = parseInt(target.value);
+                      setForm({ ...form });
+                    }}
+                    value={size.price}
                     autoComplete="off"
-                    type="text"
+                    type="number"
                     placeholder="Giá"
                     className="w-full px-4 py-2 border text-center outline-none text-sm font-semibold"
                   />
                   <input
-                    name={`amount-[${index}]`}
+                    onChange={({ target }) => {
+                      sizeSlot[index].amount = parseInt(target.value);
+                      setForm({ ...form });
+                    }}
+                    value={size.amount}
                     autoComplete="off"
-                    type="text"
+                    type="number"
                     placeholder="Số lượng"
                     className="w-full px-4 py-2 border text-center outline-none text-sm font-semibold"
                   />
@@ -395,7 +412,7 @@ const Manager: NextPage<{
                 <label className="font-semibold text-black">
                   Thêm hình ảnh sản phẩm
                   <span className="inline-block mx-2 text-xs font-normal text-red-500">
-                    (Require*)
+                    (Required*)
                   </span>
                 </label>
                 <label
@@ -443,8 +460,8 @@ const Manager: NextPage<{
             </button>
           </form>
         </div>
-        <div className="col-span-7">
-          <div className="flex">
+        <div className="lg:col-span-7 col-span-10">
+          {/* <div className="flex">
             <div className="flex space-x-2 flex-1">
               <select
                 defaultValue=""
@@ -472,14 +489,22 @@ const Manager: NextPage<{
                 <option value="color">Thấp nhất</option>
               </select>
             </div>
-          </div>
+          </div> */}
 
           {products?.length > 0 ? (
-            <div className="grid grid-cols-4 gap-8 my-12">
+            <div className="grid lg:grid-cols-5 md:grid-cols-3 grid-cols-2 lg:gap-6 gap-2 my-12">
               {products?.map(
-                ({ slug, files, id, name, discount, sold, sizeList }) => (
+                ({
+                  slug,
+                  files,
+                  id,
+                  name,
+                  discount,
+                  sold,
+                  sizeList,
+                  _count,
+                }) => (
                   <ProductRoleAdmin
-                    isAdmin={JSON.parse(session?.user?.image!).isAdmin}
                     key={slug as string}
                     id={id as string}
                     slug={slug as string}
@@ -488,7 +513,7 @@ const Manager: NextPage<{
                     discount={discount!}
                     price={sizeList[0].price!}
                     sold={sold!}
-                    review={39}
+                    review={_count?.reviews!}
                   />
                 )
               )}
@@ -496,30 +521,32 @@ const Manager: NextPage<{
           ) : (
             <div className="flex justify-center my-10">
               <span className="text-black font-semibold">
-                {+queryPage > page
+                {+queryPage > totalPage
                   ? "Số trang vượt quá số lượng sản phẩm"
                   : "Không tìm thấy sản phẩm"}
               </span>
             </div>
           )}
 
-          <div className="flex justify-center">
-            <div className="flex">
-              {Array.from({ length: page }).map((_page, index) => (
-                <Link
-                  href={`${router.pathname}?page=${index + 1}`}
-                  key={index}
-                  className={`${
-                    page === index + 1
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-100 text-black"
-                  } active:scale-105 border-2 w-10 h-10 flex justify-center items-center hover:bg-opacity-80`}
-                >
-                  <h1 className="text-lg font-semibold">{index + 1}</h1>
-                </Link>
-              ))}
+          {totalPage > 1 && (
+            <div className="flex justify-center">
+              <div className="flex">
+                {Array.from({ length: totalPage }).map((_page, index) => (
+                  <Link
+                    href={`${router.pathname}?page=${index + 1}`}
+                    key={index}
+                    className={`${
+                      +queryPage === index + 1
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-100 text-black"
+                    } active:scale-105 border-2 w-10 h-10 flex justify-center items-center hover:bg-opacity-80`}
+                  >
+                    <h1 className="text-lg font-semibold">{index + 1}</h1>
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </Layout>

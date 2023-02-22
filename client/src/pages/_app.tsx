@@ -4,10 +4,13 @@ import "swiper/css";
 import "swiper/css/free-mode";
 import "swiper/css/navigation";
 import "swiper/css/thumbs";
+import "moment/locale/vi";
 import type { AppProps } from "next/app";
 import { SessionProvider } from "next-auth/react";
 import NextNProgress from "nextjs-progressbar";
 import { Toaster } from "react-hot-toast";
+import { Provider } from "react-redux";
+import { store } from "@/redux/store";
 
 export default function App({
   Component,
@@ -15,9 +18,11 @@ export default function App({
 }: AppProps) {
   return (
     <SessionProvider session={session}>
-      <Toaster />
-      <NextNProgress color="#377dff" options={{ showSpinner: false }} />
-      <Component {...pageProps} />
+      <Provider store={store}>
+        <Toaster />
+        <NextNProgress color="#377dff" options={{ showSpinner: false }} />
+        <Component {...pageProps} />
+      </Provider>
     </SessionProvider>
   );
 }

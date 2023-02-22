@@ -1,4 +1,5 @@
 import axiosInstance from "@/services/instance"
+import { User } from "@/utils/types"
 
 
 export const createUser = async ({ email, name, password }: { email: string, name: string, password: string }) => {
@@ -6,7 +7,12 @@ export const createUser = async ({ email, name, password }: { email: string, nam
     return data
 }
 
-export const getUserByEmail = async ({ email }: { email: string }) => {
-    const { data } = await axiosInstance.get(`/users/${email}`)
+export const getUserById = async ({ id }: { id: string }) => {
+    const { data } = await axiosInstance.get(`/users/${id}`)
+    return data
+}
+
+export const updateUser = async ({ id , user }: { id: string , user: User }) => {
+    const { data } = await axiosInstance.put(`/users/${id}`, user)
     return data
 }

@@ -3,6 +3,11 @@ import { Product } from '@/utils/types';
 
 
 
+export const getProductsByKeywords = async ({keyword} : { keyword : string}) => {
+    const { data } = await axiosInstance.get(`/search?keyword=${keyword}`)
+    return data
+}
+
 export const getProductsByPage = async ({ page }: { page: string }) => {
     if (+page || typeof page === "undefined") {
         const { data } = await axiosInstance.get(`/products?page=${page || 1}`)
@@ -12,6 +17,7 @@ export const getProductsByPage = async ({ page }: { page: string }) => {
         return data
     }
 }
+
 
 export const getSellingAndNewProduct = async () => {
     const { data } = await axiosInstance.get('/products/selling&new')

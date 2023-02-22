@@ -1,9 +1,15 @@
 import { NextPage } from "next";
 import Link from "next/link";
 import React from "react";
-import { AiFillStar } from "react-icons/ai";
+import { AiFillStar, AiOutlineStar } from "react-icons/ai";
+import { BsCartPlus } from "react-icons/bs";
 import { BiShoppingBag } from "react-icons/bi";
 import currencyFormatter from "currency-formatter";
+import { Cart } from "@/utils/types";
+import { useAppDispatch } from "@/redux/hook";
+import { toast } from "react-hot-toast";
+import { updateCart } from "@/redux/features/isSlice";
+import Image from "next/image";
 
 const ProductItem: NextPage<{
   id: string;
@@ -14,13 +20,56 @@ const ProductItem: NextPage<{
   discount: number;
   review: number;
   sold: number;
-}> = ({ slug, image, price, discount, name, sold, review }) => {
+  averageRating: number;
+}> = ({ slug, image, price, discount, name, sold, review, averageRating }) => {
+  const dispatch = useAppDispatch();
+
+  const handleAddToCart = React.useCallback(() => {
+    const oldCards: Cart[] = JSON.parse(localStorage.getItem("carts")!) || [];
+    const existingProductIndex = oldCards?.findIndex(
+      (cart) => cart.slug === slug
+    );
+    if (existingProductIndex === -1) {
+      localStorage.setItem(
+        "carts",
+        JSON.stringify([
+          ...oldCards,
+          {
+            slug,
+            name,
+            image,
+            amount: 1,
+          },
+        ])
+      );
+      dispatch(updateCart());
+      toast.success(`Thêm vào giỏ hàng thành công`);
+    } else {
+      if (oldCards[existingProductIndex].amount! + 1 > 100) {
+        toast.error("Không thể thêm quá 100 sản phẩm vào giỏ hàng");
+      } else {
+        oldCards[existingProductIndex].amount =
+          oldCards[existingProductIndex].amount! + 1;
+        localStorage.setItem("carts", JSON.stringify(oldCards));
+        dispatch(updateCart());
+        toast.success(`Thêm vào giỏ hàng thành công`);
+      }
+    }
+  }, []);
+
   return (
-    <div className="group hover:shadow-lg hover:-translate-y-1 shadow-md border relative flex flex-col h-full cursor-pointer rounded-lg  transition-all duration-500">
+    <div className="group hover:shadow-lg hover:-translate-y-1 shadow-md border overflow-hidden relative flex flex-col  h-fit cursor-pointer rounded-lg  transition-all duration-500">
+      <button
+        onClick={handleAddToCart}
+        title="Thêm vào giỏ hàng"
+        className="group group-hover:translate-x-0 absolute translate-x-[-100%] rounded-br-lg  transition-all duration-500 left-0 top-0 lg:w-12 w-10 lg:h-12 h-10 hover:bg-gray-100 bg-white flex justify-center items-center"
+      >
+        <BsCartPlus className="group-active:scale-105 text-2xl text-green-500" />
+      </button>
       <Link href={`/products/${slug}`}>
         <>
           {discount > 0 && (
-            <div className="absolute top-0 right-0 w-12 h-12 bg-yellow-500 flex justify-center items-center ">
+            <div className="absolute top-0 right-0 lg:w-12 w-10 lg:h-12 h-10 lg:text-sm text-xs bg-yellow-500 flex justify-center items-center ">
               <span className="font-semibold text-white">{`-${discount}%`}</span>
             </div>
           )}
@@ -28,11 +77,17 @@ const ProductItem: NextPage<{
             {!image ? (
               <div className="w-full ! h-full bg-gray-200 animate-pulse"></div>
             ) : (
-              <img className="object-cover w-full h-full" src={image} alt="" />
+              <Image
+                width={500}
+                height={500}
+                className="object-cover w-full h-full"
+                src={image}
+                alt=""
+              />
             )}
           </div>
-          <div className="h-[40%] px-4 py-2 flex flex-col space-y-2 justify-between">
-            <span className="text-gray-500 line-through text-sm">
+          <div className="h-[40%] lg:px-4 px-2 py-2 flex flex-col space-y-2 justify-between">
+            <span className="text-gray-500 line-through lg:text-sm text-[13px] whitespace-nowrap">
               {discount > 0 &&
                 currencyFormatter.format(price, {
                   code: "VND",
@@ -48,22 +103,28 @@ const ProductItem: NextPage<{
                 })}
               </h1>
             </span>
-            <h1 className="font-semibold text-sm text-black truncate">
+            <h1 className="font-semibold lg:text-sm text-xs text-black truncate">
               {name}
             </h1>
             <div className="flex space-x-2 justify-between">
-              <div className="flex space-x-1 text-sm text-yellow-500 items-center">
-                <AiFillStar />
-                <AiFillStar />
-                <AiFillStar />
-                <AiFillStar />
-                <AiFillStar />
+              <div className="flex space-x-1 lg:text-lg text-xs items-center">
+                {Array.from({ length: 5 }).map((_item, index) => (
+                  <React.Fragment key={index}>
+                    {averageRating >= index + 1 ? (
+                      <AiFillStar className="text-yellow-500" />
+                    ) : (
+                      <AiOutlineStar className="text-gray-400" />
+                    )}
+                  </React.Fragment>
+                ))}
               </div>
-              <span className="font-semibold text-sm whitespace-nowrap">{`(${review} đánh giá)`}</span>
+              {review > 0 && (
+                <span className="lg:text-sm text-xs whitespace-nowrap">{`(${review} đánh giá)`}</span>
+              )}
             </div>
             <div className="flex justify-between">
               <BiShoppingBag className="text-green-600" size={20} />
-              <span className="text-sm font-semibold text-black">{`Đá bán ${
+              <span className="lg:text-sm text-xs font-semibold text-black">{`Đá bán ${
                 sold || 0
               }`}</span>
             </div>

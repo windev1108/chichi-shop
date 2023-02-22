@@ -1,12 +1,18 @@
-import { NextPage } from 'next'
-import React, { ReactNode } from 'react'
-import Header from '@/components/Layout/Header'
-import Head from 'next/head'
-import Footer from '@/components/Layout/Footer'
+import { NextPage } from "next";
+import React, { ReactNode, useEffect } from "react";
+import Header from "@/components/Layout/Header";
+import Head from "next/head";
+import Footer from "@/components/Layout/Footer";
+import moment from "moment";
+import { useAppSelector } from "@/redux/hook";
+import NavMobile from "@/components/Layout/NavMobile";
+const Layout: NextPage<{
+  children: ReactNode;
+}> = ({ children }) => {
 
-const Layout:NextPage<{
-    children: ReactNode
-}> = ({children}) => {
+  useEffect(() => {
+    moment.locale("vi");
+  }, []);
 
   return (
     <>
@@ -16,13 +22,14 @@ const Layout:NextPage<{
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-    <div className="bg-white w-screen h-screen overflow-y-scroll scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 overflow-x-hidden">
+       <NavMobile />
+      <div className="relative bg-white w-screen h-screen overflow-y-scroll scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 overflow-x-hidden">
         <Header />
         {children}
         <Footer />
-    </div>
+      </div>
     </>
-  )
-}
+  );
+};
 
-export default Layout
+export default Layout;

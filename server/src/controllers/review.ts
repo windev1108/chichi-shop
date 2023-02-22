@@ -48,9 +48,9 @@ export const createReviewOnProduct = async (req: Request, res: Response): Promis
                 productId
             }
         })
-        res.status(201).json({ review })
-    } catch (error) {
-        res.status(500).end()
+        res.status(201).json({ review, success: true })
+    } catch (error : any) {
+        res.status(500).json({ message : error.message})
 
     }
 }

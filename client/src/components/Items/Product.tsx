@@ -89,7 +89,7 @@ const ProductItem: NextPage<{
           <div className="h-[40%] lg:px-4 px-2 py-2 flex flex-col space-y-2 justify-between">
             <span className="text-gray-500 line-through lg:text-sm text-[13px] whitespace-nowrap">
               {discount > 0 &&
-                currencyFormatter.format(price, {
+                currencyFormatter.format(+price, {
                   code: "VND",
                 })}
               <h1
@@ -98,7 +98,7 @@ const ProductItem: NextPage<{
                 } font-bold inline-block text-red-500`}
               >
                 {" "}
-                {currencyFormatter.format(price - (price / 100) * discount, {
+                {currencyFormatter.format(Math.floor(+(price - (price / 100) * discount) / 10000) * 10000, {
                   code: "VND",
                 })}
               </h1>

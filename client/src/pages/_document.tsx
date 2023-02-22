@@ -5,7 +5,7 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        <Script src="../plugin/facebook.js" async></Script>
+        <Script src="../plugin/facebook.js"></Script>
       </Head>
       <body>
         <Main />

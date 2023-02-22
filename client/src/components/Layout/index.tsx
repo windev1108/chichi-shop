@@ -28,7 +28,7 @@ const Layout: NextPage<{
         <link rel="icon" href="./favicon.png" />
       </Head>
       <NavMobile />
-      <div className="absolute bottom-3 right-3 z-[100] shadow-md rounded-full w-20 h-20 bg-white flex justify-center items-center">
+      <div className="absolute bottom-3 right-3 z-[100] shadow-md rounded-full w-16 h-1w-16 bg-white flex justify-center items-center">
         <div
           ref={chatBoxRef}
           id="fb-customer-chat"

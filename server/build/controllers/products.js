@@ -51,7 +51,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteProductById = exports.updateProductById = exports.createProduct = exports.getProductsByKeyword = exports.getProductBySlug = exports.getSellingAndNewProducts = exports.getProductByPage = exports.getProducts = void 0;
-var constants_1 = require("./../utils/constants.js");
+var constants_1 = require("./../utils/constants");
 var client_1 = require("@prisma/client");
 var slugify_1 = __importDefault(require("slugify"));
 var prisma = new client_1.PrismaClient();
@@ -92,7 +92,7 @@ var getProductByPage = function (req, res) { return __awaiter(void 0, void 0, vo
                 page = req.query.page;
                 return [4 /*yield*/, prisma.product.findMany({
                         skip: (+process.env.MAX_ITEM_IN_PAGE * +page - +process.env.MAX_ITEM_IN_PAGE),
-                        take: 20,
+                        take: +process.env.MAX_ITEM_IN_PAGE,
                         include: {
                             files: {
                                 select: {

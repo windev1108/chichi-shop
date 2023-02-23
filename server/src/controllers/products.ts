@@ -30,7 +30,7 @@ export const getProductByPage = async (req: Request, res: Response): Promise<any
 
         const products = await prisma.product.findMany({
             skip: (+process.env.MAX_ITEM_IN_PAGE! * +page! - +process.env.MAX_ITEM_IN_PAGE!),
-            take: 20,
+            take: +process.env.MAX_ITEM_IN_PAGE!,
             include: {
                 files: {
                     select: {

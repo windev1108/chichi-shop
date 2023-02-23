@@ -16,7 +16,7 @@ const Footer = () => {
           <div>
              <h1 className="text-sm  xl font-bold text-black mb-2">Theo dõi chúng tôi</h1>
               <div className="flex space-x-3 text-blue-500">
-                <Link href="https://www.facebook.com/chichihandmade.art">
+                <Link target='_blank' href="https://www.facebook.com/chichihandmade.art">
                   <img className="w-6 h-6 object-cover" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Facebook_Logo_%282019%29.png/768px-Facebook_Logo_%282019%29.png" alt="" />
                 </Link>
               </div>

@@ -30,7 +30,7 @@ const Header = () => {
   const [keyword, setKeywords] = useState<string>("");
   const [foundProducts, setFoundProducts] = useState<Product[]>([]);
   const debounceKeywords = useDebounce(keyword,300);
-  const { isUpdated, isUpdateProfile } = useAppSelector(
+  const { isUpdatedCard , isUpdateProfile } = useAppSelector(
     (state) => state.isSlice
   );
   const [user, setUser] = useState<User | null>({});
@@ -47,7 +47,7 @@ const Header = () => {
 
   useLayoutEffect(() => {
     setCart(JSON.parse(localStorage.getItem("carts")!) || []);
-  }, [isUpdated]);
+  }, [isUpdatedCard]);
 
   useLayoutEffect(() => {
     if (session?.user?.id) {
@@ -133,7 +133,7 @@ const Header = () => {
     <nav
       className={`fixed top-0 right-0  left-0 bg-white flex w-full space-x-4 h-[64px] items-center lg:px-40 px-2 shadow-md border z-[500]`}
     >
-      <div className="flex lg:flex-1 flex-0 items-center text-black">
+      <div className="flex lg:flex-1 flex-0 items-center text-black h-[40px]">
         <Logo />
         <div className="lg:flex hidden lg:ml-20 ml-0 flex-1 space-x-4 font-semibold">
           <Link

@@ -13,7 +13,7 @@ import { toast } from "react-hot-toast";
 
 const NavMobile = () => {
   const dispatch = useAppDispatch();
-  const { isOpenNavbarMobile, isUpdated } = useAppSelector(
+  const { isOpenNavbarMobile, isUpdatedCard } = useAppSelector(
     (state) => state.isSlice
   );
   const [isOpenCart, setIsOpenCart] = useState<boolean>(false);
@@ -25,7 +25,7 @@ const NavMobile = () => {
   
   useLayoutEffect(() => {
     setCart(JSON.parse(localStorage.getItem("carts")!) || []);
-  }, [isUpdated]);
+  }, [isUpdatedCard]);
 
   const handleTakeAwayItem = (slug: string) => {
     try {

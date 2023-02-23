@@ -33,13 +33,13 @@ const ProductItem: NextPage<{
       localStorage.setItem(
         "carts",
         JSON.stringify([
-          ...oldCards,
           {
             slug,
             name,
             image,
             amount: 1,
           },
+          ...oldCards,
         ])
       );
       dispatch(updateCart());
@@ -96,9 +96,13 @@ const ProductItem: NextPage<{
                 } font-bold inline-block text-red-500`}
               >
                 {" "}
-                {currencyFormatter.format(Math.floor(+(price - (price / 100) * discount) / 10000) * 10000, {
-                  code: "VND",
-                })}
+                {currencyFormatter.format(
+                  Math.floor(+(price - (price / 100) * discount) / 10000) *
+                    10000,
+                  {
+                    code: "VND",
+                  }
+                )}
               </h1>
             </span>
             <h1 className="font-semibold lg:text-sm text-xs text-black truncate">

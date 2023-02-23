@@ -1,12 +1,13 @@
 import { Html, Head, Main, NextScript } from "next/document";
-import Script from "next/script";
 
 export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        <Script src="../plugin/facebook.js"></Script>
+        <script src="../plugin/facebook.js"></script>
       </Head>
+      <div id="fb-root"></div>
+      <div id="fb-customer-chat" className="fb-customerchat"></div>
       <body>
         <Main />
         <NextScript />

@@ -16,6 +16,7 @@ export interface User {
     address?: string,
     phone?: number
     gender?: string
+    cart?:  Cart[]
     isAdmin?: boolean
 }
 
@@ -62,10 +63,10 @@ export interface File {
     type: string
 }
 
-
 export interface Cart {
-    slug?: string
-    name?: string
-    image?: string
-    amount?: number
+   amount?: number
+   size?: Size
+   product?: Product
+   user?: User
 }
+

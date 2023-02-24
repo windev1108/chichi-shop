@@ -1,6 +1,6 @@
 import Layout from "@/components/Layout";
 import { GetServerSidePropsContext, NextPage } from "next";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { FreeMode, Navigation, Thumbs } from "swiper";
 import {
@@ -12,7 +12,7 @@ import {
 import { FaUserCircle } from "react-icons/fa";
 import Link from "next/link";
 import { getProductBySlug } from "@/lib/products";
-import { Cart, Product } from "@/utils/types";
+import { Product } from "@/utils/types";
 import currencyFormatter from "currency-formatter";
 import Image from "next/image";
 import { toast } from "react-hot-toast";
@@ -26,6 +26,7 @@ import { createReview } from "@/lib/reviews";
 import { useRouter } from "next/router";
 import moment from "moment";
 import { formatTextRendering } from "@/utils/constants";
+import { addProductToCart } from "@/lib/cart";
 
 export const getServerSideProps = async ({
   req,
@@ -55,53 +56,40 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
   const [thumbsSwiper, setThumbsSwiper] = useState<any>(null);
   const [state, setState] = useState<{
     amount: number;
-    size: string;
+    size: {
+      id?: string;
+      name?: string;
+      amount?: number;
+      price?: number;
+    };
     point: number;
     content: string;
   }>({
     amount: 1,
     point: 0,
     content: "",
-    size: product.sizeList[0].name as string,
+    size: product?.sizeList[0],
   });
   const { amount, size, point, content } = state;
 
-  const handleAddToCart = React.useCallback(() => {
+  const handleAddToCart = React.useCallback(async () => {
     if (!amount) {
       toast.error("Vui lòng nhập số lượng");
       return;
     }
-    const oldCards: Cart[] = JSON.parse(localStorage.getItem("carts")!) || [];
-    const existingProductIndex = oldCards?.findIndex(
-      (cart) => cart.slug === product.slug
-    );
-    if (existingProductIndex === -1) {
-      localStorage.setItem(
-        "carts",
-        JSON.stringify([
-          ...oldCards,
-          {
-            slug: product.slug,
-            name: product.name,
-            image: product.files[0].url,
-            amount,
-          },
-        ])
-      );
-      dispatch(updateCart());
-      toast.success(`Thêm vào giỏ hàng thành công`);
-    } else {
-      if (oldCards[existingProductIndex].amount! + amount > 100) {
-        toast.error("Không thể thêm quá 100 sản phẩm vào giỏ hàng");
-      } else {
-        oldCards[existingProductIndex].amount =
-          oldCards[existingProductIndex].amount! + amount;
-        localStorage.setItem("carts", JSON.stringify(oldCards));
-        dispatch(updateCart());
-        toast.success(`Thêm vào giỏ hàng thành công`);
-      }
+
+    if (amount > size?.amount!) {
+      toast.error("Số lượng của bạn lớn hơn số lượng tồn kho");
+      return;
     }
-  }, [amount]);
+    await addProductToCart({
+      userId: session?.user.id!,
+      productId: product.id as string,
+      amount,
+      sizeId: size.id as string,
+    });
+    dispatch(updateCart());
+  }, [amount, size]);
 
   const handleSubmitReview = React.useCallback(async () => {
     try {
@@ -110,7 +98,7 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
         return;
       }
 
-      const { review } = await createReview({
+      await createReview({
         productId: product.id as string,
         review: {
           content,
@@ -119,7 +107,6 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
         },
       });
 
-      console.log("review :", review);
       setState({ ...state, content: "", point: 0 });
       router.replace(router.asPath);
     } catch (error: any) {
@@ -142,7 +129,7 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
               modules={[Navigation, FreeMode, Thumbs]}
               className="lg:!w-full w-full  !h-[32rem]"
             >
-              {product?.files.map((file) => (
+              {product?.files?.map((file) => (
                 <SwiperSlide className="relative" key={file.url}>
                   <Image
                     className="cursor-pointer h-full !w-full !object-cover"
@@ -163,7 +150,7 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
               modules={[Navigation, FreeMode, Thumbs]}
               className="w-full h-[5rem]"
             >
-              {product.files?.map((file) => (
+              {product?.files?.map((file) => (
                 <SwiperSlide key={file.url}>
                   <Image
                     width={500}
@@ -183,20 +170,16 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
             <div className="flex space-x-2">
               <h2 className="line-through text-black lg:text-sm text-xs">
                 {" "}
-                {currencyFormatter.format(
-                  +product?.sizeList.find(({ name }) => name === size)?.price!,
-                  {
-                    code: "VND",
-                  }
-                )}
+                {currencyFormatter.format(size?.price!, {
+                  code: "VND",
+                })}
               </h2>
               <h1 className="text-red-500 font-semibold lg:text-xl text-base">
                 {currencyFormatter.format(
-                  product?.sizeList.find(({ name }) => name === size)?.price! -
-                    (product?.sizeList.find(({ name }) => name === size)
-                      ?.price! /
-                      100) *
-                      product?.discount!,
+                  Math.floor(
+                    (size?.price! - (size?.price! / 100) * product?.discount!) /
+                      10000
+                  ) * 10000,
                   {
                     code: "VND",
                   }
@@ -208,15 +191,15 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
                 Kích thước
               </h1>
               <div className="grid lg:grid-cols-6 grid-cols-4 gap-4 my-4">
-                {product.sizeList.map(({ name }) => (
+                {product.sizeList.map((item) => (
                   <button
-                    onClick={() => setState({ ...state, size: name! })}
+                    onClick={() => setState({ ...state, size: item })}
                     className={`${
-                      name === size ? "border-orange-400" : "border"
+                      item!.id! === size.id! ? "border-orange-400" : "border"
                     } border-2 px-3 py-1 text-black font-semibold text-sm`}
-                    key={name}
+                    key={item.id as string}
                   >
-                    {name}
+                    {item.name}
                   </button>
                 ))}
               </div>
@@ -237,44 +220,22 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
               <div className="h-10 flex flex-1">
                 <button
                   type="button"
-                  onClick={() => {
-                    if (amount > 1) {
-                      setState({ ...state, amount: amount ? amount - 1 : 1 });
-                    }
-                  }}
+                  onClick={() => setState({ ...state, amount: amount - 1 })}
                   className="px-4 border"
                 >
                   <AiOutlineMinus />
                 </button>
                 <input
                   value={amount}
-                  onChange={({ target }) => {
-                    if (
-                      parseInt(target.value) >
-                      product.sizeList.find(({ name }) => name === size)
-                        ?.amount!
-                    ) {
-                      toast.error("Số lượng của bạn vượt quá số lượng tồn kho");
-                    } else {
-                      setState({ ...state, amount: parseInt(target.value) });
-                    }
-                  }}
+                  onChange={({ target }) =>
+                    setState({ ...state, amount: +target.value })
+                  }
                   className="text-center w-20 px-4 outline-none border"
                   type="number"
                 />
                 <button
                   type="button"
-                  onClick={() => {
-                    if (
-                      amount >=
-                      product.sizeList.find(({ name }) => name === size)
-                        ?.amount!
-                    ) {
-                      toast.error("Số lượng của bạn vượt quá số lượng tồn kho");
-                    } else {
-                      setState({ ...state, amount: amount ? amount + 1 : 1 });
-                    }
-                  }}
+                  onClick={() => setState({ ...state, amount: amount + 1 })}
                   className="px-4 border"
                 >
                   <AiOutlinePlus />
@@ -284,14 +245,15 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
               <span className="flex-1  text-sm whitespace-nowrap">
                 Số lượng tồn kho :
                 <h1 className="inline-block mx-2 font-bold text-sm">
-                  {product.sizeList.find(({ name }) => name === size)?.amount}
+                  {size.amount}
                 </h1>
               </span>
             </div>
             <div className="flex lg:space-x-4 space-x-2">
               <button
-              type="submit"
-              className="lg:px-4 py-2 bg-blue-500 text-white rounded-lg border hover:bg-opacity-70 hover:shadow-md w-1/2 text-center">
+                type="submit"
+                className="lg:px-4 py-2 bg-blue-500 text-white rounded-lg border hover:bg-opacity-70 hover:shadow-md w-1/2 text-center"
+              >
                 Mua ngay
               </button>
 

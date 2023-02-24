@@ -21,7 +21,6 @@ import {
   updateProduct,
 } from "@/lib/products";
 import { useRouter } from "next/router";
-import { useSession } from "next-auth/react";
 import ProductRoleAdmin from "@/components/Items/ProductRoleAdmin";
 import Link from "next/link";
 import { getUserById } from "@/lib/users";

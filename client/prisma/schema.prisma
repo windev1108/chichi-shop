@@ -66,6 +66,8 @@ model User {
   reviews       Review[]
   accounts      Account[]
   sessions      Session[]
+  orders        Order[]
+  cart          Cart[]
 }
 
 model Product {
@@ -81,6 +83,11 @@ model Product {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   reviews      Review[]
+  order        Order?   @relation(fields: [orderId], references: [id])
+  orderId      String?
+  cart         Cart[]
+
+  @@index([orderId])
 }
 
 model File {
@@ -92,7 +99,7 @@ model File {
   updatedAt DateTime @updatedAt
   product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
   user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String? @unique
+  userId    String?  @unique
   productId String?
 
   @@index([productId])
@@ -120,6 +127,45 @@ model Size {
   product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
   amount    Int?
   productId String?
+  cart      Cart[]
 
   @@index([productId])
+}
+
+model Cart {
+  size      Size?    @relation(fields: [sizeId], references: [id], onDelete: Cascade)
+  amount    Int?
+  userId    String
+  productId String
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sizeId    String
+
+  @@id([userId, productId])
+  @@index([productId])
+  @@index([userId])
+  @@index([sizeId])
+}
+
+model Order {
+  id        String    @id @default(cuid())
+  products  Product[]
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String?
+  status    Status
+  message   String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+enum Status {
+  PENDING
+  FULFILLED
+  REJECTED
+  PREPARING
+  DELIVERING
+  SUCCESSS
+  FAILED
 }

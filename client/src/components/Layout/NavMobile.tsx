@@ -27,44 +27,6 @@ const NavMobile = () => {
     setCart(JSON.parse(localStorage.getItem("carts")!) || []);
   }, [isUpdatedCard]);
 
-  const handleTakeAwayItem = (slug: string) => {
-    try {
-      const oldCart: Cart[] = JSON.parse(localStorage.getItem("carts")!);
-      const foundIndexItem = oldCart?.findIndex((cart) => cart.slug === slug);
-      if (foundIndexItem !== -1) {
-        if (oldCart[foundIndexItem!].amount! <= 1) {
-          localStorage.setItem(
-            "carts",
-            JSON.stringify([...oldCart.filter((cart) => cart.slug !== slug)])
-          );
-          setCart(oldCart.filter((cart) => cart.slug !== slug));
-        } else {
-          oldCart[foundIndexItem!].amount =
-            oldCart[foundIndexItem!].amount! - 1;
-          localStorage.setItem("carts", JSON.stringify(oldCart));
-          setCart(oldCart);
-        }
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
-  };
-
-  const handlePlusItem = (slug: string) => {
-    try {
-      const oldCards: Cart[] = JSON.parse(localStorage.getItem("carts")!) || [];
-      const foundIndexItem = oldCards?.findIndex((cart) => cart.slug === slug);
-
-      if (foundIndexItem !== -1) {
-        oldCards[foundIndexItem!].amount =
-          oldCards[foundIndexItem!].amount! + 1;
-        localStorage.setItem("carts", JSON.stringify(oldCards));
-        setCart(oldCards);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
-  };
 
   const handleOpenCart = React.useCallback(() => {
     setIsOpenCart(true);
@@ -181,25 +143,24 @@ const NavMobile = () => {
           <div className="overflow-y-scroll scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
             {cart?.map((item) => (
               <div
-                key={item.slug}
+                key={item.product?.slug as string}
                 className="flex items-center space-x-2 hover:bg-gray-100 cursor-pointer"
               >
                 <Link
-                  href={`/products/${item.slug}`}
+                  href={`/products/${item.product?.slug!}`}
                   className="flex h-[4.5rem] space-x-2 items-center flex-1"
                 >
                   <Image
                     className="w-fit h-full"
                     width={100}
                     height={100}
-                    src={item.image!}
+                    src={item.product?.files[0].url!}
                     alt=""
                   />
-                  <h1 className="text-sm font-semibold">{item.name}</h1>
+                  <h1 className="text-sm font-semibold">{item?.product?.name!}</h1>
                 </Link>
                 <div className="flex items-center space-x-2 pr-2 border rounded-full">
                   <button
-                    onClick={() => handleTakeAwayItem(item.slug!)}
                     className="text-2xl p-1 hover:bg-gray-200 active:scale-105 transition-all duration-500 rounded-full"
                   >
                     <BiMinusCircle className="text-blue-500" />
@@ -208,7 +169,6 @@ const NavMobile = () => {
                     {item.amount}
                   </h1>
                   <button
-                    onClick={() => handlePlusItem(item.slug!)}
                     className="text-2xl p-1 hover:bg-gray-200 active:scale-105 transition-all duration-500 rounded-full"
                   >
                     <BiPlusCircle className="text-blue-500" />

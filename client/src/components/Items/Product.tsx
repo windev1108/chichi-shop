@@ -2,14 +2,14 @@ import { NextPage } from "next";
 import Link from "next/link";
 import React from "react";
 import { AiFillStar, AiOutlineStar } from "react-icons/ai";
-import { BsCartPlus } from "react-icons/bs";
 import { BiShoppingBag } from "react-icons/bi";
 import currencyFormatter from "currency-formatter";
-import { Cart } from "@/utils/types";
 import { useAppDispatch } from "@/redux/hook";
-import { toast } from "react-hot-toast";
-import { updateCart } from "@/redux/features/isSlice";
 import Image from "next/image";
+import { addProductToCart } from "@/lib/cart";
+import { useSession } from "next-auth/react";
+import { updateCart } from "@/redux/features/isSlice";
+import { toast } from "react-hot-toast";
 
 const ProductItem: NextPage<{
   id: string;
@@ -21,49 +21,20 @@ const ProductItem: NextPage<{
   review: number;
   sold: number;
   averageRating: number;
-}> = ({ slug, image, price, discount, name, sold, review, averageRating }) => {
-  const dispatch = useAppDispatch();
+}> = ({
+  slug,
+  image,
+  price,
+  discount,
+  name,
+  sold,
+  review,
+  averageRating,
+}) => {
 
-  const handleAddToCart = React.useCallback(() => {
-    const oldCards: Cart[] = JSON.parse(localStorage.getItem("carts")!) || [];
-    const existingProductIndex = oldCards?.findIndex(
-      (cart) => cart.slug === slug
-    );
-    if (existingProductIndex === -1) {
-      localStorage.setItem(
-        "carts",
-        JSON.stringify([
-          {
-            slug,
-            name,
-            image,
-            amount: 1,
-          },
-          ...oldCards,
-        ])
-      );
-      dispatch(updateCart());
-    } else {
-      if (oldCards[existingProductIndex].amount! + 1 > 100) {
-        toast.error("Không thể thêm quá 100 sản phẩm vào giỏ hàng");
-      } else {
-        oldCards[existingProductIndex].amount =
-          oldCards[existingProductIndex].amount! + 1;
-        localStorage.setItem("carts", JSON.stringify(oldCards));
-        dispatch(updateCart());
-      }
-    }
-  }, []);
-
+ 
   return (
     <div className="group hover:shadow-lg hover:-translate-y-1 shadow-md border overflow-hidden relative flex flex-col  h-fit cursor-pointer rounded-lg  transition-all duration-500">
-      <button
-        onClick={handleAddToCart}
-        title="Thêm vào giỏ hàng"
-        className="group group-hover:translate-x-0 absolute translate-x-[-100%] rounded-br-lg  transition-all duration-500 left-0 top-0 lg:w-12 w-10 lg:h-12 h-10 hover:bg-gray-100 bg-white flex justify-center items-center"
-      >
-        <BsCartPlus className="group-active:scale-105 text-2xl text-green-500" />
-      </button>
       <Link href={`/products/${slug}`}>
         <>
           {discount > 0 && (

@@ -9,10 +9,9 @@ import { FiLogIn, FiLogOut } from "react-icons/fi";
 import { CgProfile } from "react-icons/cg";
 import Logo from "@/components/Logo";
 import { useSession, signOut } from "next-auth/react";
-import { FaBars, FaStore, FaUserCircle } from "react-icons/fa";
-import { Cart, Product, User } from "@/utils/types";
+import { FaBars, FaStore } from "react-icons/fa";
+import { Product, User } from "@/utils/types";
 import Image from "next/image";
-import { BiMinusCircle, BiPlusCircle } from "react-icons/bi";
 import currencyFormatter from "currency-formatter";
 import { toast } from "react-hot-toast";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
@@ -20,17 +19,17 @@ import useDebounce from "@/utils/hook/useDebounce";
 import { getProductsByKeywords } from "@/lib/products";
 import { useRouter } from "next/router";
 import { getUserById } from "@/lib/users";
-import { toggleNavbarMobile } from "@/redux/features/isSlice";
+import { toggleNavbarMobile, updateCart } from "@/redux/features/isSlice";
+import { clearCart } from "@/lib/cart";
 
 const Header = () => {
   const { data: session, status } = useSession();
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const [cart, setCart] = useState<Cart[]>();
   const [keyword, setKeywords] = useState<string>("");
   const [foundProducts, setFoundProducts] = useState<Product[]>([]);
-  const debounceKeywords = useDebounce(keyword,300);
-  const { isUpdatedCard , isUpdateProfile } = useAppSelector(
+  const debounceKeywords = useDebounce(keyword, 300);
+  const { isUpdatedCard, isUpdateProfile } = useAppSelector(
     (state) => state.isSlice
   );
   const [user, setUser] = useState<User | null>({});
@@ -46,16 +45,12 @@ const Header = () => {
   }, [debounceKeywords]);
 
   useLayoutEffect(() => {
-    setCart(JSON.parse(localStorage.getItem("carts")!) || []);
-  }, [isUpdatedCard]);
-
-  useLayoutEffect(() => {
     if (session?.user?.id) {
       getUserById({ id: session?.user?.id as string }).then(({ user }) =>
         setUser(user)
       );
     }
-  }, [isUpdateProfile]);
+  }, [isUpdateProfile, isUpdatedCard]);
 
   const handleSubmitSearch = React.useCallback(
     (e: React.FormEvent) => {
@@ -73,49 +68,21 @@ const Header = () => {
     [keyword]
   );
 
-  const handleTakeAwayItem = (slug: string) => {
+  const handleClearCart = async () => {
     try {
-      const oldCart: Cart[] = JSON.parse(localStorage.getItem("carts")!);
-      const foundIndexItem = oldCart?.findIndex((cart) => cart.slug === slug);
-      if (foundIndexItem !== -1) {
-        if (oldCart[foundIndexItem!].amount! <= 1) {
-          localStorage.setItem(
-            "carts",
-            JSON.stringify([...oldCart.filter((cart) => cart.slug !== slug)])
-          );
-          setCart(oldCart.filter((cart) => cart.slug !== slug));
+      if (status === "authenticated") {
+        const { message, success } = await clearCart({
+          userId: user?.id as string,
+        });
+        dispatch(updateCart());
+        if (success) {
+          toast.success(message);
         } else {
-          oldCart[foundIndexItem!].amount =
-            oldCart[foundIndexItem!].amount! - 1;
-          localStorage.setItem("carts", JSON.stringify(oldCart));
-          setCart(oldCart);
+          toast.error(message);
         }
+      } else {
+        toast.error("Vui lòng đăng nhập");
       }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
-  };
-
-  const handlePlusItem = (slug: string) => {
-    try {
-      const oldCards: Cart[] = JSON.parse(localStorage.getItem("carts")!) || [];
-      const foundIndexItem = oldCards?.findIndex((cart) => cart.slug === slug);
-
-      if (foundIndexItem !== -1) {
-        oldCards[foundIndexItem!].amount =
-          oldCards[foundIndexItem!].amount! + 1;
-        localStorage.setItem("carts", JSON.stringify(oldCards));
-        setCart(oldCards);
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    }
-  };
-
-  const handleClearCart = () => {
-    try {
-      localStorage.setItem("carts", JSON.stringify([]));
-      setCart([]);
     } catch (error: any) {
       toast.error(error.message);
     }
@@ -189,7 +156,9 @@ const Header = () => {
                     height={100}
                   />
                   <div className="flex flex-col">
-                    <h1 className="font-[500] text-sm text-black">{product.name}</h1>
+                    <h1 className="font-[500] text-sm text-black">
+                      {product.name}
+                    </h1>
                     <span className="text-gray-500 line-through text-sm">
                       {product?.discount! > 0 &&
                         currencyFormatter.format(product.sizeList[0].price!, {
@@ -220,82 +189,97 @@ const Header = () => {
 
         <div className="lg:flex hidden  flex-1 items-center space-x-56 justify-end">
           <div className="flex space-x-5 items-center text-2xl text-black">
-            <div className="group relative z-[100]">
-              <AiOutlineShoppingCart />
-              <div
-                className={`${
-                  cart?.length! > 0 ? "scale-100" : "scale-0"
-                } transition-all duration-500 ease-in-out absolute top-[-20%] right-[-50%] rounded-full bg-red-500 shadow-md w-5 h-5 flex justify-center items-center`}
-              >
-                <h1 className="text-semibold text-white text-xs">
-                  {cart?.length}
-                </h1>
-              </div>
-              <div className="group-hover:block hidden absolute top-[100%] right-0">
-                <div className="w-[25rem] border flex flex-col bg-white shadow-md max-h-[20rem] overflow-y-scroll scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-400">
-                  <div className="flex justify-between px-4 items-center py-1 border-b-2">
-                    <h1 className="font-semibold text-base">Giỏ hàng</h1>
-                    <button
-                      onClick={handleClearCart}
-                      className="active:scale-105 p-2 hover:bg-gray-100 rounded-full"
-                    >
-                      <AiOutlineClear className="text-lg text-blue-500" />
-                    </button>
-                  </div>
-                  {cart?.length === 0 ? (
-                    <Image
-                      className="w-full h-[15rem]"
-                      width={500}
-                      height={500}
-                      alt=""
-                      src={require("@/resources/images/empty-cart.png")}
-                    />
-                  ) : (
-                    <div className="overflow-y-scroll scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
-                      {cart?.map((item) => (
-                        <div
-                          key={item.slug}
-                          className="flex items-center space-x-2 hover:bg-gray-100 cursor-pointer"
-                        >
+            {status === "authenticated" && (
+              <div className="group relative z-[100]">
+                <AiOutlineShoppingCart />
+                <div
+                  className={`${
+                    user?.cart?.length! > 0 ? "scale-100" : "scale-0"
+                  } transition-all duration-500 ease-in-out absolute top-[-20%] right-[-50%] rounded-full bg-red-500 shadow-md w-5 h-5 flex justify-center items-center`}
+                >
+                  <h1 className="text-semibold text-white text-xs">
+                    {user?.cart?.length}
+                  </h1>
+                </div>
+                <div className="group-hover:block hidden absolute top-[100%] right-0">
+                  <div className="w-[28rem] border flex flex-col bg-white shadow-md max-h-[20rem] overflow-y-scroll scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-400">
+                    <div className="flex justify-between px-4 items-center py-1 border-b-2">
+                      <Link href="/cart">
+                        <h1 className="cursor-pointer text-sm">Xem Giỏ hàng</h1>
+                      </Link>
+                      <button
+                        onClick={handleClearCart}
+                        className="active:scale-105 p-2 hover:bg-gray-100 rounded-full"
+                      >
+                        <AiOutlineClear className="text-lg text-blue-500" />
+                      </button>
+                    </div>
+                    {user?.cart?.length === 0 ? (
+                      <Image
+                        className="w-full h-[15rem]"
+                        width={500}
+                        height={500}
+                        alt=""
+                        src={require("@/resources/images/empty-cart.png")}
+                      />
+                    ) : (
+                      <div className="overflow-y-scroll scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
+                        {user?.cart?.map((item) => (
                           <Link
-                            href={`/products/${item.slug}`}
-                            className="flex h-[4.5rem] space-x-2 items-center flex-1"
+                            href={`/products/${item.product?.slug as string}`}
+                            key={item.product?.slug as string}
+                            className="flex items-center space-x-4 hover:bg-gray-100 cursor-pointer p-2 h-24"
                           >
                             <Image
                               className="w-fit h-full"
                               width={100}
                               height={100}
-                              src={item.image!}
+                              src={item?.product?.files[0].url!}
                               alt=""
                             />
                             <h1 className="text-sm font-semibold">
-                              {item.name}
+                              {item.product?.name as string}
                             </h1>
+
+                            <div className="items-center whitespace-nowrap flex flex-col">
+                              <h2 className="text-sm text-gray-600">
+                                {item.size?.name!}
+                              </h2>
+                              <h3 className="text-sm text-gray-400">{`SL :${item?.amount!}`}</h3>
+                            </div>
+                            <div className="items-center space-x-2 pr-2">
+                              <span className="text-gray-500 line-through lg:text-sm text-[13px] whitespace-nowrap">
+                                {item?.product?.discount! > 0 &&
+                                  currencyFormatter.format(+item.size?.price!, {
+                                    code: "VND",
+                                  })}
+                              </span>
+                              <h1
+                                className={`text-sm font-bold text-red-500 pr-2`}
+                              >
+                                {" "}
+                                {currencyFormatter.format(
+                                  Math.floor(
+                                    +(
+                                      +item.size?.price! -
+                                      (+item.size?.price! / 100) *
+                                        item?.product?.discount!
+                                    ) / 10000
+                                  ) * 10000,
+                                  {
+                                    code: "VND",
+                                  }
+                                )}
+                              </h1>
+                            </div>
                           </Link>
-                          <div className="flex items-center space-x-2 pr-2 border rounded-full">
-                            <button
-                              onClick={() => handleTakeAwayItem(item.slug!)}
-                              className="p-1 hover:bg-gray-200 active:scale-105 transition-all duration-500 rounded-full"
-                            >
-                              <BiMinusCircle className="text-blue-500" />
-                            </button>
-                            <h1 className="text-sm text-black font-semibold">
-                              {item.amount}
-                            </h1>
-                            <button
-                              onClick={() => handlePlusItem(item.slug!)}
-                              className="p-1 hover:bg-gray-200 active:scale-105 transition-all duration-500 rounded-full"
-                            >
-                              <BiPlusCircle className="text-blue-500" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {status === "authenticated" ? (
               <div className="group relative items-center">

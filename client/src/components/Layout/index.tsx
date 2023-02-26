@@ -5,11 +5,16 @@ import Head from "next/head";
 import Footer from "@/components/Layout/Footer";
 import moment from "moment";
 import NavMobile from "@/components/Layout/NavMobile";
+import { useAppSelector } from "@/redux/hook";
+import OrderModal from "@/components/Modal/OrderModal";
+import Backdrop from "@/components/Modal/Backdrop";
 
 const Layout: NextPage<{
   children: ReactNode;
   title?: string;
 }> = ({ children, title }) => {
+  const { orderModal } = useAppSelector((state) => state.orderSlice);
+  const { isOpenBackdrop } = useAppSelector((state) => state.isSlice);
   useEffect(() => {
     moment.locale("vi");
   }, []);
@@ -23,6 +28,8 @@ const Layout: NextPage<{
         <link rel="icon" href="./favicon.png" />
       </Head>
       <NavMobile />
+      {isOpenBackdrop && <Backdrop />}
+      {orderModal.isOpen && <OrderModal />}
       <div className="relative bg-white w-screen h-screen overflow-y-scroll scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 overflow-x-hidden">
         <Header />
         {children}

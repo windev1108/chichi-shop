@@ -8,6 +8,7 @@ import { GetServerSidePropsContext, NextPage } from "next";
 import { authOptions } from "./api/auth/[...nextauth]";
 import { getSellingAndNewProduct } from "@/lib/products";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 export const getServerSideProps = async ({
   req,
@@ -32,16 +33,16 @@ const Home: NextPage<{
     selling: Product[];
   };
 }> = ({ products: { selling, news } }) => {
-  const [ sliderPerView , setSliderView ] = useState<number>(6);
+  const [sliderPerView, setSliderView] = useState<number>(6);
 
   useEffect(() => {
     function handleResize() {
-      if(window.innerWidth <= 414){
-        setSliderView(2)
-      }else if(window.innerWidth <= 820){
-        setSliderView(4)
-      }else{
-        setSliderView(6)
+      if (window.innerWidth <= 414) {
+        setSliderView(2);
+      } else if (window.innerWidth <= 820) {
+        setSliderView(4);
+      } else {
+        setSliderView(6);
       }
     }
     handleResize();
@@ -53,14 +54,18 @@ const Home: NextPage<{
 
   return (
     <Layout>
-      <div className="relative lg:px-40 md:px-10 px-4 lg:py-20 py-16">
-        <img
-          src="https://tinhlamjw.com/wp-content/uploads/2021/10/NguPhucTinhLam-bannerweb.jpg"
-          className="lg:my-10 my-4 lg:object-fill object-fill w-full lg:h-[50vh] h-[25vh] rounded-xl"
+      <div className="relative lg:px-40 md:px-10 px-4 lg:py-20 py-16 bg-gray-50">
+        <Image
+          width={1000}
+          height={1000}
+          src={require("@/resources/images/banner.gif")}
+          className="lg:my-10 my-4 lg:object-cover object-fill w-full lg:h-[50vh] h-[25vh] rounded-xl"
           alt=""
         />
         <div className="flex flex-col">
-          <h1 className="font-semibold lg:text-xl text-base">Sản phẩm bán chạy</h1>
+          <h1 className="font-semibold lg:text-xl text-base">
+            Sản phẩm bán chạy
+          </h1>
           <div className="lg:h-[380px] h-fit lg:my-10 my-4">
             <Swiper
               slidesPerView={sliderPerView}

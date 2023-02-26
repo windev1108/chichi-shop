@@ -21,6 +21,7 @@ import { useRouter } from "next/router";
 import { getUserById } from "@/lib/users";
 import { toggleNavbarMobile, updateCart } from "@/redux/features/isSlice";
 import { clearCart } from "@/lib/cart";
+import { IoMdNotificationsOutline } from "react-icons/io";
 
 const Header = () => {
   const { data: session, status } = useSession();
@@ -188,20 +189,30 @@ const Header = () => {
         </div>
 
         <div className="lg:flex hidden  flex-1 items-center space-x-56 justify-end">
-          <div className="flex space-x-5 items-center text-2xl text-black">
+          <div className="flex space-x-6 items-center text-2xl text-black">
             {status === "authenticated" && (
               <div className="group relative z-[100]">
-                <AiOutlineShoppingCart />
+                <button className="p-1 hover:bg-gray-100 rounded-full">
+                  <IoMdNotificationsOutline />
+                </button>
+              </div>
+            )}
+
+            {status === "authenticated" && (
+              <div className="group relative z-[100]">
+                <button className="p-1 hover:bg-gray-100 rounded-full">
+                  <AiOutlineShoppingCart />
+                </button>
                 <div
                   className={`${
                     user?.cart?.length! > 0 ? "scale-100" : "scale-0"
-                  } transition-all duration-500 ease-in-out absolute top-[-20%] right-[-50%] rounded-full bg-red-500 shadow-md w-5 h-5 flex justify-center items-center`}
+                  } transition-all duration-500 ease-in-out absolute top-[0%] right-[-20%] rounded-full bg-red-500 shadow-md w-5 h-5 flex justify-center items-center`}
                 >
                   <h1 className="text-semibold text-white text-xs">
                     {user?.cart?.length}
                   </h1>
                 </div>
-                <div className="group-hover:block hidden absolute top-[100%] right-0">
+                <div className="group-hover:block hidden absolute top-[100%] right-0 after:absolute after:top-[-10%] after:right-0 after:left-0 after:h-10 after:bg-transparent ">
                   <div className="w-[28rem] border flex flex-col bg-white shadow-md max-h-[20rem] overflow-y-scroll scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-400">
                     <div className="flex justify-between px-4 items-center py-1 border-b-2">
                       <Link href="/cart">

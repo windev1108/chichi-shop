@@ -58,7 +58,6 @@ model User {
   image         File?
   phone         Int?      @db.Int
   gender        String?   @db.Text
-  address       String?   @db.Text
   isAdmin       Boolean?  @default(false)
   createdAt     DateTime? @default(now())
   updatedAt     DateTime? @updatedAt
@@ -68,24 +67,25 @@ model User {
   sessions      Session[]
   orders        Order[]
   cart          Cart[]
+  address       Address?
 }
 
 model Product {
-  id           String   @id @default(cuid())
-  name         String   @unique
-  category     String?  @db.Text
+  id           String         @id @default(cuid())
+  name         String         @unique
+  category     String?        @db.Text
   discount     Int?
-  descriptions String?  @db.LongText
+  descriptions String?        @db.LongText
   sizeList     Size[]
   sold         Int?
-  slug         String   @unique
+  slug         String         @unique
   files        File[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
   reviews      Review[]
-  order        Order?   @relation(fields: [orderId], references: [id])
   orderId      String?
   cart         Cart[]
+  productOrder ProductOrder[]
 
   @@index([orderId])
 }
@@ -121,13 +121,14 @@ model Review {
 }
 
 model Size {
-  id        String   @id @default(cuid())
-  name      String?
-  price     Int?
-  product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
-  amount    Int?
-  productId String?
-  cart      Cart[]
+  id           String         @id @default(cuid())
+  name         String?
+  price        Int?
+  product      Product?       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  amount       Int?
+  productId    String?
+  cart         Cart[]
+  ProductOrder ProductOrder[]
 
   @@index([productId])
 }
@@ -148,16 +149,42 @@ model Cart {
 }
 
 model Order {
-  id        String    @id @default(cuid())
-  products  Product[]
-  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String         @id @default(cuid())
+  products  ProductOrder[]
+  user      User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String?
-  status    Status
+  status    Status?
+  total     Int?
+  feeShip   Int?
   message   String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 
   @@index([userId])
+}
+
+model ProductOrder {
+  id        String  @id @default(cuid())
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  amount    Int?
+  size      Size?   @relation(fields: [sizeId], references: [id], onDelete: Cascade)
+  sizeId    String?
+  order     Order?  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   String?
+
+  @@index([productId])
+  @@index([orderId])
+  @@index([sizeId])
+}
+
+model Address {
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String  @unique
+  provinceId Int?
+  districtId Int?
+  wardId     Int?
+  street     String?
 }
 
 enum Status {
@@ -166,6 +193,6 @@ enum Status {
   REJECTED
   PREPARING
   DELIVERING
-  SUCCESSS
+  SUCCESS
   FAILED
 }

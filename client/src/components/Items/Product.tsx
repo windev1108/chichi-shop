@@ -4,13 +4,7 @@ import React from "react";
 import { AiFillStar, AiOutlineStar } from "react-icons/ai";
 import { BiShoppingBag } from "react-icons/bi";
 import currencyFormatter from "currency-formatter";
-import { useAppDispatch } from "@/redux/hook";
 import Image from "next/image";
-import { addProductToCart } from "@/lib/cart";
-import { useSession } from "next-auth/react";
-import { updateCart } from "@/redux/features/isSlice";
-import { toast } from "react-hot-toast";
-
 const ProductItem: NextPage<{
   id: string;
   slug: string;

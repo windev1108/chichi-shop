@@ -10,6 +10,9 @@ import { BsGenderFemale, BsGenderMale } from "react-icons/bs";
 import {
   destroySingleImage,
   genderList,
+  isValidName,
+  isValidPassword,
+  isValidPhone,
   uploadSingleImage,
 } from "@/utils/constants";
 import {
@@ -22,6 +25,7 @@ import { useRouter } from "next/router";
 import { useAppDispatch } from "@/redux/hook";
 import { updateProfile } from "@/redux/features/isSlice";
 import { useSession } from "next-auth/react";
+import { getDistrict, getProvince, getWard } from "@/lib/ghn";
 
 export const getServerSideProps = async ({
   req,
@@ -54,6 +58,13 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
     address: string;
     phone: number | null;
     gender: string;
+    provinceId?: number | null;
+    districtId?: number | null;
+    wardId?: number | null;
+    street?: string;
+    listProvince?: any[];
+    listDistrict?: any[];
+    listWard?: any[];
     blobFile?: {
       url: string;
       origin: any;
@@ -68,6 +79,13 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
     address: "",
     gender: "",
     phone: null,
+    provinceId: null,
+    districtId: null,
+    wardId: null,
+    street: "",
+    listProvince: [],
+    listDistrict: [],
+    listWard: [],
     blobFile: {
       type: "",
       url: "",
@@ -84,20 +102,46 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
     address,
     gender,
     phone,
+    provinceId,
+    districtId,
+    wardId,
+    street,
+    listProvince,
+    listDistrict,
+    listWard,
     isShowPassword,
     isLoading,
   } = state;
 
   useEffect(() => {
-    setState({
-      name: user.name!,
-      address: user.address! || "",
-      email: user.email!,
-      gender: user.gender! || "",
-      password: user.password! || "",
-      phone: user.phone! || null,
-    });
+    if (!user.address) {
+      getProvince().then(({ data }) => {
+        setState({
+          name: user.name!,
+          address: user.address! || "",
+          email: user.email!,
+          gender: user.gender! || "",
+          password: user.password! || "",
+          phone: user.phone! || null,
+          listProvince: data,
+        });
+      });
+    }
   }, []);
+
+  useEffect(() => {
+    if (provinceId) {
+      getDistrict({ provinceId }).then(({ data }) => {
+        setState({ ...state, listDistrict: data });
+      });
+    }
+
+    if (districtId) {
+      getWard({ districtId }).then(({ data }) => {
+        setState({ ...state, listWard: data });
+      });
+    }
+  }, [provinceId, districtId]);
 
   const onChangeAvatar = (e: any) => {
     try {
@@ -123,9 +167,20 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
           toast.error("Vui lòng điền thông tin bắt buộc");
           return;
         }
+        if (!isValidName(name)) {
+          toast.error("Tên ít nhất 2 kí tự");
+          return;
+        }
 
-        if (password.length < 6) {
-          toast.error("Mật khẩu phải từ 6 kí tự");
+        if (!isValidPassword(password)) {
+          toast.error(
+            "Mật khẩu từ 8 kí tự và ít nhất 1 số và 1 kí tự đặc biệt"
+          );
+          return;
+        }
+
+        if (!isValidPhone(`${phone}`)) {
+          toast.error("Số điện thoại không hợp lệ");
           return;
         }
 
@@ -174,12 +229,14 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
     [name, password, address, gender, phone, blobFile]
   );
 
+  console.log("state :", state);
+
   return (
     <Layout>
       <div className="p-40 flex justify-center bg-gray-200">
         <form
           onSubmit={handleSubmit}
-          className="flex flex-col w-[28rem] space-y-4 border p-8 rounded-lg shadow-md bg-white"
+          className="flex flex-col w-[50vw] space-y-4 border p-8 rounded-lg shadow-md bg-white"
         >
           <div className="flex justify-center items-center">
             {status === "authenticated" && session?.user?.id === user?.id ? (
@@ -348,31 +405,91 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
           </div>
 
           <div className="flex flex-col space-y-2 lg:text-base text-sm rounded-lg">
-            <label htmlFor="address" className="font-semibold">
-              Địa chỉ
-            </label>
-            {status === "authenticated" && session?.user?.id === user?.id ? (
-              <div className="flex border-[1px]  border-gray-300 rounded-lg">
-                <input
-                  id="address"
-                  value={address!}
-                  onChange={(e) =>
-                    setState({
-                      ...state,
-                      address: e.target.value,
-                    })
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex flex-col space-y-2">
+                <label htmlFor="address" className="font-semibold">
+                  Thành phố
+                </label>
+                <select
+                  onChange={({target}) => setState({...state, provinceId: +target.value!})
                   }
-                  autoComplete="off"
-                  className="py-2 w-full outline-none px-4 rounded-lg"
+                  value={+provinceId!}
+                  className="border px-4 py-2 outline-none rounded-lg"
+                >
+                  <option value={""} hidden>
+                    Chọn thành phố
+                  </option>
+                  {listProvince?.map((province) => (
+                    <option key={province.ProvinceID} value={province.ProvinceID}>
+                      {province.ProvinceName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex flex-col space-y-2">
+                <label htmlFor="address" className="font-semibold">
+                  Quận
+                </label>
+                <select
+                  disabled={!provinceId}
+                  onChange={({ target }) =>
+                    setState({ ...state, districtId: +target.value })
+                  }
+                  value={districtId!}
+                  className={`${
+                    !provinceId && "bg-gray-200 cursor-not-allowed"
+                  } border px-4 py-2 outline-none rounded-lg`}
+                >
+                  <option value={""} hidden>
+                    Chọn quận
+                  </option>
+                  {listDistrict?.map((district) => (
+                    <option key={district.DistrictID} value={district.DistrictID}>
+                      {district.DistrictName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex flex-col space-y-2">
+                <label htmlFor="address" className="font-semibold">
+                  Phường / xã
+                </label>
+                <select
+                  disabled={!districtId}
+                  onChange={({ target }) =>
+                    setState({ ...state, wardId: +target.value })
+                  }
+                  value={wardId!}
+                  className={`${
+                    !districtId && "bg-gray-200 cursor-not-allowed"
+                  } border px-4 py-2 outline-none rounded-lg`}
+                >
+                  <option value={""} hidden>
+                    Chọn phường / xã
+                  </option>
+                  {listWard?.map((ward) => (
+                    <option key={ward.WardCode} value={ward.WardCode}>{ward.WardName}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex flex-col space-y-2">
+                <label htmlFor="address" className="font-semibold">
+                  Đường / số nhà
+                </label>
+                <input
+                  disabled={!wardId}
+                  value={street}
+                  onChange={({target}) => setState({...state, street: target.value!})}
                   type="text"
-                  placeholder={`Nhập địa chỉ của bạn`}
+                  className={`${
+                    !districtId && "bg-gray-200 cursor-not-allowed"
+                  } border px-4 py-2 outline-none rounded-lg h-[37px]`}
                 />
               </div>
-            ) : (
-              <h1 className="text-black">
-                {address ? address : "Chưa có địa chỉ"}
-              </h1>
-            )}
+            </div>
           </div>
 
           <div className="flex flex-col w-1/2 space-y-2 lg:text-base text-sm">
@@ -383,28 +500,37 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
               Giới tính
             </label>
             {status === "authenticated" && session?.user?.id === user?.id ? (
-              <div className="grid grid-cols-2 order-[1px] w-full border-gray-300  border-[1px] rounded-sm ">
-                {genderList.map((item) => (
-                  <div
-                    key={item}
-                    onClick={() =>
-                      setState({
-                        ...state,
-                        gender: item,
-                      })
-                    }
-                    className={`${
-                      gender === item
-                        ? "bg-blue-500 text-white"
-                        : "bg-white text-black"
-                    }  flex items-center justify-center space-x-2 cursor-pointer text-center px-4 py-2 border`}
-                  >
-                    {item === "MALE" ? <BsGenderMale /> : <BsGenderFemale />}
-                    <span className="font-semibold lg:block hidden">
-                      {item === "MALE" ? "Nam" : "Nữ"}
-                    </span>
-                  </div>
-                ))}
+              <div className="grid grid-cols-3 w-full border-gray-300  px-4 py-2 rounded-sm ">
+                <div className="flex space-x-2">
+                  <label htmlFor="male">Nam</label>
+                  <input
+                    defaultChecked={user?.gender === "MALE" ? true : false}
+                    onChange={() => setState({ ...state, gender: "MALE" })}
+                    id="male"
+                    name="gender"
+                    type="radio"
+                  />
+                </div>
+                <div className="flex space-x-2">
+                  <label htmlFor="female">Nữ</label>
+                  <input
+                    defaultChecked={user?.gender === "FEMALE" ? true : false}
+                    onChange={() => setState({ ...state, gender: "FEMALE" })}
+                    id="female"
+                    name="gender"
+                    type="radio"
+                  />
+                </div>
+                <div className="flex space-x-2">
+                  <label htmlFor="other">Khác</label>
+                  <input
+                    defaultChecked={user?.gender === "OTHER" ? true : false}
+                    onChange={() => setState({ ...state, gender: "OTHER" })}
+                    id="other"
+                    name="gender"
+                    type="radio"
+                  />
+                </div>
               </div>
             ) : (
               <h1>{gender === "FEMALE" ? "Nữ" : "Nam"}</h1>

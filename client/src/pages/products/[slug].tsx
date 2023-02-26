@@ -25,7 +25,11 @@ import { MdSend } from "react-icons/md";
 import { createReview } from "@/lib/reviews";
 import { useRouter } from "next/router";
 import moment from "moment";
-import { formatTextRendering } from "@/utils/constants";
+import {
+  formatCurrency,
+  formatCurrencyWithDiscount,
+  formatTextRendering,
+} from "@/utils/constants";
 import { addProductToCart } from "@/lib/cart";
 
 export const getServerSideProps = async ({
@@ -170,20 +174,13 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
             <div className="flex space-x-2">
               <h2 className="line-through text-black lg:text-sm text-xs">
                 {" "}
-                {currencyFormatter.format(size?.price!, {
-                  code: "VND",
-                })}
+                {formatCurrency({ price: size?.price! })}
               </h2>
               <h1 className="text-red-500 font-semibold lg:text-xl text-base">
-                {currencyFormatter.format(
-                  Math.floor(
-                    (size?.price! - (size?.price! / 100) * product?.discount!) /
-                      10000
-                  ) * 10000,
-                  {
-                    code: "VND",
-                  }
-                )}
+                {formatCurrencyWithDiscount({
+                  price: size?.price!,
+                  discount: product?.discount!,
+                })}
               </h1>
             </div>
             <div className="flex flex-col py-6">
@@ -191,7 +188,7 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
                 Kích thước
               </h1>
               <div className="grid lg:grid-cols-6 grid-cols-4 gap-4 my-4">
-                {product.sizeList.map((item) => (
+                {product?.sizeList.map((item) => (
                   <button
                     onClick={() => setState({ ...state, size: item })}
                     className={`${

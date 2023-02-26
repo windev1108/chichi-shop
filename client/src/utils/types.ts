@@ -68,5 +68,35 @@ export interface Cart {
    size?: Size
    product?: Product
    user?: User
+   isChecked?: boolean
 }
 
+
+export interface Order {
+    id?: string
+    user?: User
+    products?: ProductOrder[]
+    status?: Status
+    message?: string
+    createdAt?: string
+}
+
+
+export interface ProductOrder {
+    id?: string
+    product: Product
+    size?: Size
+    amount: number
+    user?: User
+}
+
+
+enum Status {
+    PENDING,
+    FULFILLED,
+    REJECTED,
+    PREPARING,
+    DELIVERING,
+    SUCCESS,
+    FAILED,
+  }

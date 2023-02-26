@@ -5,14 +5,16 @@ import type { RootState } from '@/redux/store'
 interface isState {
     isUpdatedCard: boolean
     isUpdateProfile: boolean,
-    isOpenNavbarMobile: boolean
+    isOpenNavbarMobile: boolean,
+    isOpenBackdrop: boolean
 }
 
 // Define the initial state using that type
 const initialState: isState = {
     isUpdatedCard: false,
     isUpdateProfile: false,
-    isOpenNavbarMobile: false
+    isOpenNavbarMobile: false,
+    isOpenBackdrop: false
 }
 
 export const counterSlice = createSlice({
@@ -27,11 +29,14 @@ export const counterSlice = createSlice({
         },
         toggleNavbarMobile: (state) => {
             state.isOpenNavbarMobile = !state.isOpenNavbarMobile
+        },
+        toggleBackdrop: (state) => {
+            state.isOpenBackdrop = !state.isOpenBackdrop
         }
     },
 })
 
-export const { updateCart , updateProfile , toggleNavbarMobile } = counterSlice.actions
+export const { updateCart, updateProfile, toggleNavbarMobile, toggleBackdrop } = counterSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type
 export const selectIsSlice = (state: RootState) => state.isSlice

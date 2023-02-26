@@ -21,10 +21,22 @@ export const getCart = async ({ userId }: { userId: string }) => {
     return data
 }
 
-export const updateCart = async ({ userId, productId, amount, sizeId }: { userId: string, productId: string, amount?: number, sizeId?: string }) => {
+export const updateCartItem = async ({ userId, productId, amount, sizeId }: { userId: string, productId: string, amount?: number, sizeId?: string }) => {
     const { data } = await axiosInstance.put(`/users/${userId}/cart/${productId}`, {
         amount,
         sizeId
     })
     return data
 }
+
+
+export const plusCartItem = async ({ userId, productId }: { userId: string, productId: string }) => {
+    const { data } = await axiosInstance.get(`/users/${userId}/cart/${productId}/plus`)
+    return data
+} 
+
+
+export const takeAwayItem = async ({ userId, productId }: { userId: string, productId: string }) => {
+    const { data } = await axiosInstance.get(`/users/${userId}/cart/${productId}/takeAway`)
+    return data
+} 

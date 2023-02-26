@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { init, cleanup } from "./index";
 
-const Component = () => {
+const PluginMessenger = () => {
   useEffect(() => {
     init();
 
@@ -18,4 +18,4 @@ const Component = () => {
   );
 };
 
-export default Component;
+export default PluginMessenger;

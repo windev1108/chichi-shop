@@ -145,7 +145,7 @@ const OrderModal = () => {
               <h1 className="text-black font-semibold">Địa chỉ nhận hàng</h1>
             </div>
             {user?.address ? (
-              <h1 className="text-black text-sm">{user?.address}</h1>
+              <h1 className="text-black text-sm">{user?.address?.provinceName!}</h1>
             ) : (
               <div className="flex text-black text-sm items-center space-x-2">
                 <h1>Chưa có địa chỉ nhận hàng</h1>

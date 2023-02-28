@@ -88,9 +88,9 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
     }
     await addProductToCart({
       userId: session?.user.id!,
-      productId: product.id as string,
+      productId: product?.id as string,
       amount,
-      sizeId: size.id as string,
+      sizeId: size?.id as string,
     });
     dispatch(updateCart());
   }, [amount, size]);
@@ -103,7 +103,7 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
       }
 
       await createReview({
-        productId: product.id as string,
+        productId: product?.id as string,
         review: {
           content,
           point,
@@ -192,7 +192,7 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
                   <button
                     onClick={() => setState({ ...state, size: item })}
                     className={`${
-                      item!.id! === size.id! ? "border-orange-400" : "border"
+                      item!.id! === size?.id! ? "border-orange-400" : "border"
                     } border-2 px-3 py-1 text-black font-semibold text-sm`}
                     key={item.id as string}
                   >
@@ -202,13 +202,13 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
               </div>
             </div>
 
-            {product.descriptions && (
+            {product?.descriptions && (
               <div className="flex flex-col">
                 <h1 className="font-semibold text-black lg:text-base text-sm">
                   Mô tả
                 </h1>
                 <p className="text-sm whitespace-pre-wrap">
-                  {formatTextRendering({ text: product.descriptions })}
+                  {formatTextRendering({ text: product?.descriptions })}
                 </p>
               </div>
             )}
@@ -242,7 +242,7 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
               <span className="flex-1  text-sm whitespace-nowrap">
                 Số lượng tồn kho :
                 <h1 className="inline-block mx-2 font-bold text-sm">
-                  {size.amount}
+                  {size?.amount}
                 </h1>
               </span>
             </div>
@@ -272,7 +272,7 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
             <div className="flex space-x-1 items-center lg:text-xl text-base">
               {Array.from({ length: 5 }).map((_item, index) => (
                 <React.Fragment key={index}>
-                  {product.averageRating! >= index + 1 ? (
+                  {product?.averageRating! >= index + 1 ? (
                     <AiFillStar className="text-yellow-500" />
                   ) : (
                     <AiOutlineStar className="text-gray-400 " />
@@ -280,7 +280,7 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
                 </React.Fragment>
               ))}
             </div>
-            {product.averageRating === 0 ? (
+            {product?.averageRating === 0 ? (
               <span className="text-black lg:text-base text-sm">
                 Sản phẩm này chưa có đánh giá
               </span>
@@ -363,7 +363,7 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
           )}
 
           <div className="flex flex-col space-y-2 my-10">
-            {product.reviews?.map(({ user, content, point, createdAt, id }) => (
+            {product?.reviews?.map(({ user, content, point, createdAt, id }) => (
               <div
                 key={id}
                 className="relative flex space-x-4 items-center border px-4 py-2 rounded-lg"

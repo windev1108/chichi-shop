@@ -13,11 +13,20 @@ export interface User {
     email?: string
     password?: string
     image?: File
-    address?: string,
     phone?: number
     gender?: string
     cart?:  Cart[]
     isAdmin?: boolean
+    address?: {
+        provinceId: number
+        provinceName: string
+        districtId: number
+        districtName: string
+        wardId: number
+        wardName: string
+        street: string
+    }
+
 }
 
 export interface Product {

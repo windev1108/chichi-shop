@@ -56,7 +56,7 @@ model User {
   name          String?   @db.Text
   password      String?   @db.Text
   image         File?
-  phone         Int?      @db.Int
+  phone         String?   @db.Text
   gender        String?   @db.Text
   isAdmin       Boolean?  @default(false)
   createdAt     DateTime? @default(now())
@@ -179,12 +179,15 @@ model ProductOrder {
 }
 
 model Address {
-  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId     String  @unique
-  provinceId Int?
-  districtId Int?
-  wardId     Int?
-  street     String?
+  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String  @unique
+  provinceId   Int?
+  provinceName String?
+  districtId   Int?
+  districtName String?
+  wardId       Int?
+  wardName     String?
+  street       String?
 }
 
 enum Status {

@@ -1,15 +1,13 @@
 import Layout from "@/components/Layout";
 import { Session, User } from "@/utils/types";
 import { GetServerSidePropsContext, NextPage } from "next";
-import { unstable_getServerSession as getServerSession } from "next-auth";
+import { getServerSession } from "next-auth";
 import React, { useCallback, useState, useEffect } from "react";
 import { authOptions } from "./api/auth/[...nextauth]";
 import { getUserById, updateUser } from "@/lib/users";
 import Image from "next/image";
-import { BsGenderFemale, BsGenderMale } from "react-icons/bs";
 import {
   destroySingleImage,
-  genderList,
   isValidName,
   isValidPassword,
   isValidPhone,
@@ -38,8 +36,8 @@ export const getServerSideProps = async ({
 
   return {
     props: {
-      user,
-      session,
+      use: user || null,
+      session: session || null,
       origin: `${
         req.headers.host?.includes("localhost") ? "http" : "https"
       }://${req.headers.host}`,
@@ -55,12 +53,14 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
     name: string;
     email: string;
     password: string;
-    address: string;
-    phone: number | null;
+    phone: string;
     gender: string;
     provinceId?: number | null;
+    provinceName?: string;
     districtId?: number | null;
+    districtName?: string;
     wardId?: number | null;
+    wardName?: string;
     street?: string;
     listProvince?: any[];
     listDistrict?: any[];
@@ -76,11 +76,13 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
     name: "",
     email: "",
     password: "",
-    address: "",
     gender: "",
-    phone: null,
+    phone: "",
     provinceId: null,
+    provinceName: "",
+    districtName: "",
     districtId: null,
+    wardName: "",
     wardId: null,
     street: "",
     listProvince: [],
@@ -99,11 +101,13 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
     name,
     email,
     password,
-    address,
     gender,
     phone,
     provinceId,
+    provinceName,
     districtId,
+    districtName,
+    wardName,
     wardId,
     street,
     listProvince,
@@ -118,30 +122,15 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
       getProvince().then(({ data }) => {
         setState({
           name: user.name!,
-          address: user.address! || "",
           email: user.email!,
           gender: user.gender! || "",
           password: user.password! || "",
-          phone: user.phone! || null,
+          phone: `${user.phone!}` || "",
           listProvince: data,
         });
       });
     }
   }, []);
-
-  useEffect(() => {
-    if (provinceId) {
-      getDistrict({ provinceId }).then(({ data }) => {
-        setState({ ...state, listDistrict: data });
-      });
-    }
-
-    if (districtId) {
-      getWard({ districtId }).then(({ data }) => {
-        setState({ ...state, listWard: data });
-      });
-    }
-  }, [provinceId, districtId]);
 
   const onChangeAvatar = (e: any) => {
     try {
@@ -179,7 +168,7 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
           return;
         }
 
-        if (!isValidPhone(`${phone}`)) {
+        if (!isValidPhone(String(phone))) {
           toast.error("Số điện thoại không hợp lệ");
           return;
         }
@@ -194,8 +183,16 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
               password,
               image: file,
               gender,
-              address,
-              phone: phone!,
+              phone: +phone!,
+              address: {
+                provinceId: provinceId!,
+                provinceName: provinceName!,
+                districtId: districtId!,
+                districtName: districtName!,
+                wardId: wardId!,
+                wardName: wardName!,
+                street: street!,
+              },
             },
           });
           toast.success("Sửa thông tin thành công");
@@ -214,8 +211,7 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
               email,
               password,
               gender,
-              address,
-              phone: phone!,
+              phone: +phone!,
             },
           });
           setState({ ...state, isLoading: false });
@@ -226,10 +222,20 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
         toast.error(error.message);
       }
     },
-    [name, password, address, gender, phone, blobFile]
+    [
+      name,
+      password,
+      gender,
+      phone,
+      blobFile,
+      provinceId,
+      districtId,
+      wardId,
+      street,
+    ]
   );
 
-  console.log("state :", state);
+  console.log("state", state);
 
   return (
     <Layout>
@@ -385,10 +391,10 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
                 <input
                   id="phone"
                   value={phone!}
-                  onChange={(e) =>
+                  onChange={({ target }) =>
                     setState({
                       ...state,
-                      phone: +e.target.value,
+                      phone: target.value,
                     })
                   }
                   autoComplete="off"
@@ -411,16 +417,26 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
                   Thành phố
                 </label>
                 <select
-                  onChange={({target}) => setState({...state, provinceId: +target.value!})
-                  }
-                  value={+provinceId!}
+                  onChange={async ({ target }) => {
+                    const { data } = await getDistrict({
+                      provinceId: +target.value!,
+                    });
+                    setState({
+                      ...state,
+                      provinceId: +target.value!,
+                      listDistrict: data,
+                    });
+                  }}
                   className="border px-4 py-2 outline-none rounded-lg"
                 >
                   <option value={""} hidden>
                     Chọn thành phố
                   </option>
                   {listProvince?.map((province) => (
-                    <option key={province.ProvinceID} value={province.ProvinceID}>
+                    <option
+                      key={province.ProvinceID}
+                      value={province.ProvinceID}
+                    >
                       {province.ProvinceName}
                     </option>
                   ))}
@@ -432,11 +448,17 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
                   Quận
                 </label>
                 <select
-                  disabled={!provinceId}
-                  onChange={({ target }) =>
-                    setState({ ...state, districtId: +target.value })
-                  }
-                  value={districtId!}
+                  disabled={provinceId! ? false : true}
+                  onChange={async ({ target }) => {
+                    const { data } = await getWard({
+                      districtId: +target.value!,
+                    });
+                    setState({
+                      ...state,
+                      districtId: +target.value!,
+                      listWard: data,
+                    });
+                  }}
                   className={`${
                     !provinceId && "bg-gray-200 cursor-not-allowed"
                   } border px-4 py-2 outline-none rounded-lg`}
@@ -445,7 +467,10 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
                     Chọn quận
                   </option>
                   {listDistrict?.map((district) => (
-                    <option key={district.DistrictID} value={district.DistrictID}>
+                    <option
+                      key={district.DistrictID}
+                      value={district.DistrictID!}
+                    >
                       {district.DistrictName}
                     </option>
                   ))}
@@ -457,20 +482,21 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
                   Phường / xã
                 </label>
                 <select
-                  disabled={!districtId}
+                  disabled={districtId! ? false : true}
                   onChange={({ target }) =>
-                    setState({ ...state, wardId: +target.value })
+                    setState({ ...state, wardId: +target.value! })
                   }
-                  value={wardId!}
                   className={`${
-                    !districtId && "bg-gray-200 cursor-not-allowed"
+                    !districtId! && "bg-gray-200 cursor-not-allowed"
                   } border px-4 py-2 outline-none rounded-lg`}
                 >
                   <option value={""} hidden>
                     Chọn phường / xã
                   </option>
                   {listWard?.map((ward) => (
-                    <option key={ward.WardCode} value={ward.WardCode}>{ward.WardName}</option>
+                    <option key={ward.WardCode} value={ward.WardCode!}>
+                      {ward.WardName}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -480,12 +506,14 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
                   Đường / số nhà
                 </label>
                 <input
-                  disabled={!wardId}
+                  disabled={wardId ? false : true}
                   value={street}
-                  onChange={({target}) => setState({...state, street: target.value!})}
+                  onChange={({ target }) =>
+                    setState({ ...state, street: target.value! })
+                  }
                   type="text"
                   className={`${
-                    !districtId && "bg-gray-200 cursor-not-allowed"
+                    !wardId! && "bg-gray-200 cursor-not-allowed"
                   } border px-4 py-2 outline-none rounded-lg h-[37px]`}
                 />
               </div>

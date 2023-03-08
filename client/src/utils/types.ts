@@ -1,8 +1,11 @@
+import { StringDecoder } from "string_decoder"
 
 
 export interface Session {
     user: {
         email: string
+        name: string
+        image?: File
     }
     expires: string
 }
@@ -13,9 +16,10 @@ export interface User {
     email?: string
     password?: string
     image?: File
-    phone?: number
+    phone?: string
     gender?: string
     cart?:  Cart[]
+    orders?: Order[]
     isAdmin?: boolean
     address?: {
         provinceId: number
@@ -30,14 +34,14 @@ export interface User {
 }
 
 export interface Product {
-    id?: String
-    name?: String
+    id?: string
+    name?: string
     descriptions: string
     discount?: number
     category?: string
     sold?: number
     sizeList: Size[]
-    slug?: String
+    slug?: string
     files: File[]
     updatedAt?: string
     averageRating?: number
@@ -84,8 +88,11 @@ export interface Cart {
 export interface Order {
     id?: string
     user?: User
+    userId?: string
+    feeShip?: number
+    total?: number
     products?: ProductOrder[]
-    status?: Status
+    status?: Status | string
     message?: string
     createdAt?: string
 }
@@ -93,10 +100,18 @@ export interface Order {
 
 export interface ProductOrder {
     id?: string
-    product: Product
+    product?: Product
+    productId?: string
     size?: Size
+    sizeId?: string
     amount: number
     user?: User
+}
+
+export interface TransportMethod {
+    service_id: number
+    short_name: string
+    service_type_id: number
 }
 
 

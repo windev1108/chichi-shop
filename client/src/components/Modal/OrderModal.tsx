@@ -1,3 +1,4 @@
+import { calculateFee, getServicePackage } from "@/lib/ghn";
 import { createOrder } from "@/lib/orders";
 import { getUserById } from "@/lib/users";
 import { setOrderModal } from "@/redux/features/orderSlice";
@@ -8,14 +9,16 @@ import {
   formatDiscount,
   formatPriceWithDiscount,
 } from "@/utils/constants";
-import { User } from "@/utils/types";
+import { TransportMethod, User } from "@/utils/types";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import React, { useEffect, useState } from "react";
+import React, { useLayoutEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { AiFillCopy, AiFillPlusCircle, AiOutlinePlus } from "react-icons/ai";
+import { FaEdit } from "react-icons/fa";
+import { HiOutlineTruck } from "react-icons/hi";
 import { ImLocation } from "react-icons/im";
 import { IoMdClose } from "react-icons/io";
 import { MdPayment, MdPayments } from "react-icons/md";
@@ -27,25 +30,110 @@ const OrderModal = () => {
   const { orderModal } = useAppSelector((state) => state.orderSlice);
   const [state, setState] = useState<{
     methodPayment: number;
+    methodTransportId: number | null;
+    methodTransportTypeId: number | null;
     user: User | null;
     randomCode: number | null;
+    transportFee: number | null;
+    methodTransportList: TransportMethod[];
+    totalPriceProduct: number | null;
+    totalPricePayment: number | null;
+    totalDiscounted: number | null;
   }>({
     methodPayment: 0,
+    methodTransportId: null,
     randomCode: null,
+    transportFee: null,
+    methodTransportTypeId: null,
+    totalPriceProduct: null,
+    totalPricePayment: null,
+    totalDiscounted: null,
     user: {},
+    methodTransportList: [],
   });
-  const { user, methodPayment, randomCode } = state;
+  const {
+    user,
+    methodPayment,
+    methodTransportList,
+    randomCode,
+    methodTransportId,
+    methodTransportTypeId,
+    transportFee,
+    totalPriceProduct,
+    totalPricePayment,
+    totalDiscounted,
+  } = state;
   const { cart } = orderModal;
 
-  useEffect(() => {
-    getUserById({ id: session?.user?.id as string }).then(({ user }) =>
-      setState({ ...state, user })
+  useLayoutEffect(() => {
+    getUserById({ id: session?.user?.id as string }).then(
+      ({ user }: { user: User }) => {
+        if (user.address) {
+          getServicePackage({ toDistrictId: user.address.districtId! }).then(
+            ({ data }) => {
+              setState({
+                ...state,
+                user,
+                methodTransportList: data,
+                totalDiscounted: cart
+                  .filter(({ isChecked }) => isChecked)
+                  .reduce(
+                    (acc, current) =>
+                      acc +
+                      formatDiscount({
+                        price: current.size?.price!,
+                        discount: current?.product?.discount!,
+                        amount: current?.amount!,
+                      }),
+                    0
+                  ),
+                totalPriceProduct: cart
+                  .filter(({ isChecked }) => isChecked)
+                  .reduce(
+                    (acc, current) =>
+                      acc +
+                      formatPriceWithDiscount({
+                        price: current?.size?.price!,
+                        discount: current?.product?.discount!,
+                        amount: current?.amount!,
+                      }),
+                    0
+                  ),
+              });
+            }
+          );
+        } else {
+          setState({ ...state, user });
+        }
+      }
     );
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setState({ ...state, randomCode: Math.floor(Math.random() * 1000000) });
   }, [methodPayment]);
+
+  useLayoutEffect(() => {
+    if (user && methodTransportId) {
+      calculateFee({
+        amount: orderModal.cart.reduce(
+          (acc, curr) => acc + curr?.amount!,
+          0
+        ) as number,
+        serviceId: methodTransportId!,
+        serviceTypeId: methodTransportTypeId!,
+        toDistrictId: user?.address?.districtId!,
+        toWardCode: user?.address?.wardId!,
+      }).then(({ data }) => {
+        setState({
+          ...state,
+          transportFee: data.total,
+          totalPricePayment:
+            Math.floor((+totalPriceProduct! + +data.total) / 1000) * 1000,
+        });
+      });
+    }
+  }, [methodTransportId]);
 
   const handleRedirectProfile = React.useCallback(() => {
     router.replace(`/profile?id=${session?.user?.id}`);
@@ -69,21 +157,59 @@ const OrderModal = () => {
 
   const handleSubmitOrder = React.useCallback(async () => {
     try {
+      if (!user?.address) {
+        toast.error("Vui lòng nhập địa chỉ nhận hàng");
+        return;
+      }
+
       if (!methodPayment) {
         toast.error("Vui lòng chọn phương thức thanh toán");
         return;
-      } 
+      }
 
+      if (!methodTransportId) {
+        toast.error("Vui lòng chọn phương thức vận chuyển");
+        return;
+      }
 
       const { success } = await createOrder({
         order: {
-          
-        }
-      })
+          status: "PENDING",
+          userId: user?.id!,
+          total: totalPricePayment!,
+          feeShip: transportFee!,
+          products: cart.map((item) => {
+            return {
+              productId: item?.product?.id!,
+              sizeId: item?.size?.id!,
+              amount: item?.amount!,
+            };
+          }),
+        },
+      });
+      if (success) {
+        toast.success("Đơn hàng đã tạo thành công");
+        dispatch(
+          setOrderModal({
+            isOpen: false,
+            cart: [],
+          })
+        );
+      } else {
+        toast.error("Đơn hàng đã tạo thất bại");
+      }
     } catch (error: any) {
       toast.error(error.message);
     }
-  }, [methodPayment, randomCode, cart]);
+  }, [
+    methodPayment,
+    randomCode,
+    cart,
+    totalPricePayment,
+    totalPriceProduct,
+    user,
+    methodTransportId,
+  ]);
   return (
     <>
       <div
@@ -145,7 +271,17 @@ const OrderModal = () => {
               <h1 className="text-black font-semibold">Địa chỉ nhận hàng</h1>
             </div>
             {user?.address ? (
-              <h1 className="text-black text-sm">{user?.address?.provinceName!}</h1>
+              <div className="flex space-x-3 items-center">
+                <h1 className="text-black text-sm">{`${user?.address
+                  ?.street!}, ${user?.address?.wardName} , ${user?.address
+                  ?.districtName!} , ${user?.address?.provinceName}`}</h1>
+                <button
+                  onClick={handleRedirectProfile}
+                  className="p-2 hover:bg-gray-100 rounded-full"
+                >
+                  <FaEdit className="hover:scale-110 transition-all duration-500 ease-in-out text-lg cursor-pointer text-blue-500" />
+                </button>
+              </div>
             ) : (
               <div className="flex text-black text-sm items-center space-x-2">
                 <h1>Chưa có địa chỉ nhận hàng</h1>
@@ -153,7 +289,7 @@ const OrderModal = () => {
                   onClick={handleRedirectProfile}
                   className="p-2 hover:bg-gray-100 rounded-full"
                 >
-                  <AiOutlinePlus />
+                  <AiOutlinePlus className="hover:scale-110 transition-all duration-500 ease-in-out text-lg cursor-pointer text-blue-500" />
                 </button>
               </div>
             )}
@@ -176,9 +312,15 @@ const OrderModal = () => {
               }
               className="border outline-none px-4 py-3 rounded-lg w-1/2"
             >
-              <option className="px-4 py-2" value="0" hidden>Chọn phương thức thanh toán</option>
-              <option className="px-4 py-2" value="1">Thanh toán khi nhận hàng</option>
-              <option className="px-4 py-2" value="2">Thanh toán momo</option>
+              <option className="px-4 py-2" value="0" hidden>
+                Chọn phương thức thanh toán
+              </option>
+              <option className="px-4 py-2" value="1">
+                Thanh toán khi nhận hàng
+              </option>
+              <option className="px-4 py-2" value="2">
+                Thanh toán momo
+              </option>
             </select>
 
             {methodPayment === 2 && (
@@ -224,27 +366,52 @@ const OrderModal = () => {
               </div>
             )}
 
+            <div className="flex space-x-2">
+              <HiOutlineTruck className="text-gray-500 text-xl" />
+              <h1 className="font-semibold text-black">
+                Phương thức vận chuyển
+              </h1>
+            </div>
+
+            <select
+              onChange={({ target }) =>
+                setState({
+                  ...state,
+                  methodTransportId: JSON.parse(target.value!)
+                    .methodTransportId,
+                  methodTransportTypeId: JSON.parse(target.value!)
+                    .methodTransportTypeId,
+                })
+              }
+              value={JSON.stringify({
+                methodTransportId,
+                methodTransportTypeId,
+              })}
+              className="border outline-none px-4 py-3 rounded-lg w-1/2"
+            >
+              <option value="" hidden>
+                Chọn phương thức vận chuyển
+              </option>
+              {methodTransportList.map((item) => (
+                <option
+                  key={item.service_id}
+                  value={JSON.stringify({
+                    methodTransportId: item.service_id,
+                    methodTransportTypeId: item.service_type_id,
+                  })}
+                >
+                  {item.short_name}
+                </option>
+              ))}
+            </select>
+
             <div className="px-2 border-b"></div>
             <div className="p-2 flex flex-col space-y-1">
               <span>
                 Tổng tiền hàng
                 <h1 className="inline-block mx-2 font-semibold text-black">
                   {`: ${formatCurrency({
-                    price:
-                      (cart
-                        .filter(({ isChecked }) => isChecked)
-                        .reduce(
-                          (acc, current) =>
-                            acc +
-                            formatPriceWithDiscount({
-                              price: current?.size?.price!,
-                              discount: current?.product?.discount!,
-                              amount: current?.amount!,
-                            }),
-                          0
-                        ) /
-                        10000) *
-                      10000,
+                    price: totalPriceProduct!,
                   })}`}
                 </h1>
               </span>
@@ -252,21 +419,30 @@ const OrderModal = () => {
                 Đã giảm
                 <h1 className="inline-block mx-2 font-semibold text-black">
                   {`: ${formatCurrency({
-                    price: cart
-                      .filter(({ isChecked }) => isChecked)
-                      .reduce(
-                        (acc, current) =>
-                          acc +
-                          formatDiscount({
-                            price: current.size?.price!,
-                            discount: current?.product?.discount!,
-                            amount: current?.amount!,
-                          }),
-                        0
-                      ),
+                    price: totalDiscounted!,
                   })}`}
                 </h1>
               </span>
+
+              {transportFee && (
+                <span>
+                  Phí vận chuyển
+                  <h1 className="inline-block mx-2 font-semibold text-black">
+                    {`: ${formatCurrency({ price: transportFee! })}`}
+                  </h1>
+                </span>
+              )}
+
+              {transportFee && (
+                <span>
+                  Tổng thanh toán
+                  <h1 className="inline-block mx-2 font-semibold text-black">
+                    {`: ${formatCurrency({
+                      price: totalPricePayment!,
+                    })}`}
+                  </h1>
+                </span>
+              )}
             </div>
 
             <div className="flex items-center justify-center">

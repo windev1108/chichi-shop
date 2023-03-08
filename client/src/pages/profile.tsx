@@ -36,7 +36,7 @@ export const getServerSideProps = async ({
 
   return {
     props: {
-      use: user || null,
+      user: user || null,
       session: session || null,
       origin: `${
         req.headers.host?.includes("localhost") ? "http" : "https"
@@ -129,6 +129,34 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
           listProvince: data,
         });
       });
+    } else {
+      getProvince().then(({ data: listProvince }) => {
+        getDistrict({ provinceId: user?.address?.provinceId! }).then(
+          ({ data: listDistrict }) => {
+            getWard({ districtId: user.address?.districtId! }).then(
+              ({ data: listWard }) => {
+                setState({
+                  name: user.name!,
+                  email: user.email!,
+                  gender: user.gender! || "",
+                  password: user.password! || "",
+                  phone: `${user.phone!}` || "",
+                  listProvince,
+                  listDistrict,
+                  listWard,
+                  provinceName: user?.address?.provinceName,
+                  provinceId: user?.address?.provinceId,
+                  districtId: user?.address?.districtId,
+                  districtName: user?.address?.districtName,
+                  wardId: user?.address?.wardId,
+                  wardName: user?.address?.wardName,
+                  street: user?.address?.street,
+                });
+              }
+            );
+          }
+        );
+      });
     }
   }, []);
 
@@ -148,95 +176,88 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
     }
   };
 
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      try {
-        if (!name || !password) {
-          toast.error("Vui lòng điền thông tin bắt buộc");
-          return;
-        }
-        if (!isValidName(name)) {
-          toast.error("Tên ít nhất 2 kí tự");
-          return;
-        }
-
-        if (!isValidPassword(password)) {
-          toast.error(
-            "Mật khẩu từ 8 kí tự và ít nhất 1 số và 1 kí tự đặc biệt"
-          );
-          return;
-        }
-
-        if (!isValidPhone(String(phone))) {
-          toast.error("Số điện thoại không hợp lệ");
-          return;
-        }
-
-        if (blobFile?.url) {
-          setState({ ...state, isLoading: true });
-          const file = await uploadSingleImage(blobFile);
-          await updateUser({
-            id: user?.id!,
-            user: {
-              name,
-              password,
-              image: file,
-              gender,
-              phone: +phone!,
-              address: {
-                provinceId: provinceId!,
-                provinceName: provinceName!,
-                districtId: districtId!,
-                districtName: districtName!,
-                wardId: wardId!,
-                wardName: wardName!,
-                street: street!,
-              },
-            },
-          });
-          toast.success("Sửa thông tin thành công");
-          dispatch(updateProfile());
-          setState({ ...state, isLoading: false });
-          router.replace(router.asPath);
-          if (user?.image?.publicId) {
-            await destroySingleImage(user.image);
-          }
-        } else {
-          setState({ ...state, isLoading: true });
-          await updateUser({
-            id: user?.id!,
-            user: {
-              name,
-              email,
-              password,
-              gender,
-              phone: +phone!,
-            },
-          });
-          setState({ ...state, isLoading: false });
-          toast.success("Sửa thông tin thành công");
-          router.replace(router.asPath);
-        }
-      } catch (error: any) {
-        toast.error(error.message);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (!name || !password) {
+        toast.error("Vui lòng điền thông tin bắt buộc");
+        return;
       }
-    },
-    [
-      name,
-      password,
-      gender,
-      phone,
-      blobFile,
-      provinceId,
-      districtId,
-      wardId,
-      street,
-    ]
-  );
+      if (!isValidName(name)) {
+        toast.error("Tên ít nhất 2 kí tự");
+        return;
+      }
+
+      if (!isValidPassword(password)) {
+        toast.error("Mật khẩu từ 8 kí tự và ít nhất 1 số và 1 kí tự đặc biệt");
+        return;
+      }
+
+      if (!isValidPhone(String(phone))) {
+        toast.error("Số điện thoại không hợp lệ");
+        return;
+      }
+
+      if (blobFile?.url) {
+        setState({ ...state, isLoading: true });
+        const file = await uploadSingleImage(blobFile);
+        await updateUser({
+          id: user?.id!,
+          user: {
+            name,
+            password,
+            image: file,
+            gender,
+            phone,
+            address: {
+              provinceId: provinceId!,
+              provinceName: provinceName!,
+              districtId: districtId!,
+              districtName: districtName!,
+              wardId: wardId!,
+              wardName: wardName!,
+              street: street!,
+            },
+          },
+        });
+        toast.success("Sửa thông tin thành công");
+        dispatch(updateProfile());
+        setState({ ...state, isLoading: false });
+        router.replace(router.asPath);
+        if (user?.image?.publicId) {
+          await destroySingleImage(user.image);
+        }
+      } else {
+        setState({ ...state, isLoading: true });
+        await updateUser({
+          id: user?.id!,
+          user: {
+            name,
+            email,
+            password,
+            gender,
+            phone,
+            address: {
+              provinceId: provinceId!,
+              provinceName: provinceName!,
+              districtId: districtId!,
+              districtName: districtName!,
+              wardId: wardId!,
+              wardName: wardName!,
+              street: street!,
+            },
+          },
+        });
+        setState({ ...state, isLoading: false });
+        toast.success("Sửa thông tin thành công");
+        router.replace(router.asPath);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
 
   console.log("state", state);
-
   return (
     <Layout>
       <div className="p-40 flex justify-center bg-gray-200">
@@ -288,7 +309,7 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
                   <Image
                     className="w-32 h-32 rounded-full object-cover"
                     src={
-                      user.image?.url
+                      user?.image?.url
                         ? user?.image?.url
                         : require("@/resources/images/noAvatar.webp")
                     }
@@ -304,7 +325,7 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
             <label htmlFor="email" className="font-semibold">
               Email
             </label>
-            {status === "authenticated" && session?.user?.id === user.id ? (
+            {status === "authenticated" && session?.user?.id === user?.id ? (
               <input
                 disabled={true}
                 className="cursor-not-allowed outline-none border-[1px] border-gray-300 bg-gray-200 px-4 py-2 rounded-lg lg:text-base text-sm"
@@ -417,13 +438,19 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
                   Thành phố
                 </label>
                 <select
+                  value={JSON.stringify({
+                    provinceId,
+                    provinceName,
+                  })}
                   onChange={async ({ target }) => {
+                    const json = JSON.parse(target.value);
                     const { data } = await getDistrict({
-                      provinceId: +target.value!,
+                      provinceId: json.provinceId!,
                     });
                     setState({
                       ...state,
-                      provinceId: +target.value!,
+                      provinceId: json.provinceId!,
+                      provinceName: json.provinceName,
                       listDistrict: data,
                     });
                   }}
@@ -435,7 +462,10 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
                   {listProvince?.map((province) => (
                     <option
                       key={province.ProvinceID}
-                      value={province.ProvinceID}
+                      value={JSON.stringify({
+                        provinceId: province.ProvinceID,
+                        provinceName: province.ProvinceName,
+                      })}
                     >
                       {province.ProvinceName}
                     </option>
@@ -448,14 +478,20 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
                   Quận
                 </label>
                 <select
-                  disabled={provinceId! ? false : true}
+                  value={JSON.stringify({
+                    districtId,
+                    districtName,
+                  })}
+                  disabled={listDistrict?.length === 0}
                   onChange={async ({ target }) => {
+                    const json = JSON.parse(target?.value!);
                     const { data } = await getWard({
-                      districtId: +target.value!,
+                      districtId: json.districtId!,
                     });
                     setState({
                       ...state,
-                      districtId: +target.value!,
+                      districtId: json.districtId,
+                      districtName: json.districtName!,
                       listWard: data,
                     });
                   }}
@@ -469,7 +505,10 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
                   {listDistrict?.map((district) => (
                     <option
                       key={district.DistrictID}
-                      value={district.DistrictID!}
+                      value={JSON?.stringify({
+                        districtId: district.DistrictID!,
+                        districtName: district.DistrictName!,
+                      })}
                     >
                       {district.DistrictName}
                     </option>
@@ -482,10 +521,19 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
                   Phường / xã
                 </label>
                 <select
-                  disabled={districtId! ? false : true}
-                  onChange={({ target }) =>
-                    setState({ ...state, wardId: +target.value! })
-                  }
+                  disabled={listWard?.length === 0}
+                  onChange={({ target }) => {
+                    const json = JSON.parse(target.value!);
+                    setState({
+                      ...state,
+                      wardId: json.wardId,
+                      wardName: json.wardName,
+                    });
+                  }}
+                  value={JSON.stringify({
+                    wardId,
+                    wardName,
+                  })}
                   className={`${
                     !districtId! && "bg-gray-200 cursor-not-allowed"
                   } border px-4 py-2 outline-none rounded-lg`}
@@ -494,7 +542,13 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
                     Chọn phường / xã
                   </option>
                   {listWard?.map((ward) => (
-                    <option key={ward.WardCode} value={ward.WardCode!}>
+                    <option
+                      key={ward.WardCode}
+                      value={JSON.stringify({
+                        wardId: +ward.WardCode!,
+                        wardName: ward.WardName!,
+                      })}
+                    >
                       {ward.WardName}
                     </option>
                   ))}

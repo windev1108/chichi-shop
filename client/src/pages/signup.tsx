@@ -21,6 +21,7 @@ import { createUser } from "@/lib/users";
 import Logo from "@/components/Logo";
 import Layout from "@/components/Layout";
 import Link from "next/link";
+import { isValidName, isValidPassword, isValidPhone } from "@/utils/constants";
 
 export const getServerSideProps = async ({
   req,
@@ -50,83 +51,110 @@ export const getServerSideProps = async ({
 const SignIn = () => {
   const router = useRouter();
   const [form, setForm] = useState<{
+    name: string;
     email: string;
+    phone: string;
     password: string;
     isShowPassword?: boolean;
-    isShowLogin?: boolean;
-    isRemember?: boolean;
-    hasRemember?: boolean;
   }>({
+    name: "",
     email: "",
     password: "",
+    phone: "",
     isShowPassword: false,
-    isShowLogin: true,
-    isRemember: false,
-    hasRemember: false,
   });
-  const {  email, password, isShowPassword, isRemember, hasRemember } =
-    form;
+  const { name, email, password, phone, isShowPassword } = form;
 
-  const handleSignIn = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      if (!email) {
-        toast.error("Vui lòng nhập email");
+      if (!isValidName(name)) {
+        toast.error("Họ tên phải lớn hơn 2 kí tự");
         return;
       }
 
-      if (!password) {
-        toast.error("Vui lòng nhập password");
+      if (!isValidPassword(password)) {
+        toast.error(
+          "Mật khẩu phải từ 8 kí tự và có ít nhất 1 kí tự đặc biệt và 1 số"
+        );
         return;
       }
-      const { ok, error }: any = await signIn("credentials", {
-        redirect: false,
+
+      if (!isValidPhone(phone)) {
+        toast.error("Số điện thoại không hợp lệ");
+        return;
+      }
+
+      const { success, message }: any = await createUser({
         email,
-        password
+        name,
+        password,
+        phone,
       });
 
-      if (!ok) {
-        toast.error(error);
+      if (!success) {
+        toast.error(message);
+        return;
       } else {
-        if (isRemember) {
-          localStorage.setItem(
-            "rememberMe",
-            JSON.stringify({
-              email,
-              password
-            })
-          );
+        const { ok, error }: any = await signIn("credentials", {
+          redirect: false,
+          callbackUrl: "/",
+          email,
+          password,
+        });
+        if (!ok) {
+          toast.error(error);
+        } else {
+          toast.success("Đăng ký tài khoản thành công");
+          router.replace("/");
         }
-        toast.success("Đăng nhập thành công");
-        router.replace("/");
+        setForm({
+          email: "",
+          name: "",
+          password: "",
+          phone: "",
+        });
       }
     } catch (error: any) {
       toast.error(error.message);
     }
   };
 
- 
-  useEffect(() => {
-    const rememberData = JSON.parse(localStorage.getItem("rememberMe")!);
-    setForm({
-      ...form,
-      email: rememberData.email,
-      password: rememberData.password,
-      hasRemember: Boolean(rememberData),
-    });
-  }, []);
-
   return (
     <Layout>
       <div className="h-screen bg-gray-50 overflow-hidden flex justify-center">
-        <div className="my-40 lg:w-[30vw] w-[95vw] flex justify-center bg-white shadow-md border">
+        <div className="my-28 lg:w-[30vw] w-[95vw] flex justify-center bg-white shadow-md border">
           <div className="mt-8 flex flex-col item-items-center w-full p-10">
             <div className="flex justify-center items-center space-x-2 text-center w-full my-10">
               <AiFillLock className="text-2xl text-green-400" />
-              <h1 className="text-2xl font-semibold text-center">Đăng nhập</h1>
+              <h1 className="text-2xl font-semibold text-center">Đăng ký</h1>
             </div>
-            <form className="mt-3 w-full" onSubmit={handleSignIn}>
+            <form className="mt-3 w-full" onSubmit={handleSignUp}>
               <div className="grid grid-cols-12 gap-2">
+                <div className="col-span-12 space-y-2">
+                  <label htmlFor="name">Họ tên</label>
+                  <input
+                    value={name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    required
+                    name="name"
+                    id="name"
+                    placeholder="Nhập họ tên  của bạn"
+                    className={`bg-gray-50 w-full px-4 py-2 outline-none border`}
+                    autoComplete="new-password"
+                  />
+                </div>
+                <div className="col-span-12 space-y-2">
+                  <label htmlFor="phone">Số điện thoại</label>
+                  <input
+                    value={phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    id="phone"
+                    type="number"
+                    placeholder="Nhập số điện thoại của bạn"
+                    className={`bg-gray-50 w-full px-4 py-2 outline-none border`}
+                  />
+                </div>
                 <div className="col-span-12 space-y-2">
                   <label htmlFor="email">Email</label>
                   <input
@@ -139,19 +167,13 @@ const SignIn = () => {
                     type="email"
                     name="email"
                     placeholder="Nhập email của bạn"
-                    className={`${
-                      hasRemember ? "bg-yellow-100" : "bg-transparent"
-                    } w-full px-4 py-2 border outline-none`}
+                    className={`bg-gray-50 w-full px-4 py-2 border outline-none`}
                     autoComplete="email"
                   />
                 </div>
-                <div className="col-span-12">
+                <div className="col-span-12 space-y-2">
                   <label htmlFor="password">Mật khẩu</label>
-                  <div
-                    className={`${
-                      hasRemember ? "bg-yellow-100" : "bg-transparent"
-                    } flex border items-center`}
-                  >
+                  <div className={`flex border items-center`}>
                     <input
                       value={password}
                       onChange={(e) =>
@@ -162,7 +184,7 @@ const SignIn = () => {
                       type={isShowPassword ? "text" : "password"}
                       id="password"
                       placeholder="Nhập mật khẩu của bạn"
-                      className={`bg-transparent w-full px-4 py-2 outline-none`}
+                      className={`bg-gray-50  w-full px-4 py-2 outline-none`}
                       autoComplete="new-password"
                     />
                     <button
@@ -180,46 +202,25 @@ const SignIn = () => {
                     </button>
                   </div>
                 </div>
-                <div className="my-3 w-full flex justify-between col-span-12">
-                  <div className="flex space-x-2 w-full items-center">
-                    <input
-                      checked={isRemember}
-                      onChange={() =>
-                        setForm({ ...form, isRemember: !isRemember })
-                      }
-                      className="cursor-pointer"
-                      id="forgot"
-                      type="checkbox"
-                    />
-                    <label className="cursor-pointer" htmlFor="forgot">
-                      Ghi nhớ tôi?
-                    </label>
-                  </div>
-                  <Link href="forgot">
-                    <span className="cursor-pointer hover:underline text-[#1976dE] whitespace-nowrap">
-                      Quên mật khẩu?
-                    </span>
-                  </Link>
-                </div>
               </div>
               <button
-                className="bg-blue-500 hover:bg-blue-600 my-2 w-full px-4 py-2 text-white font-semibold"
+                className="bg-blue-500 hover:bg-blue-600 my-4 w-full px-4 py-2 text-white font-semibold"
                 type="submit"
               >
-                Đăng nhập
+                Đăng ký
               </button>
               <div className="flex justify-end py-10">
                 <div>
                   <div className="flex justify-center items-center space-x-1">
                     <div>
-                      <h1>Bạn chưa có tài khoản ?</h1>
+                      <h1>Bạn đã có tài khoản ?</h1>
                     </div>
                     <div>
                       <Link
-                        href="/signup"
+                        href="/signin"
                         className="text-[#1976dE] font-semibold"
                       >
-                        Đăng ký
+                        Đăng nhập
                       </Link>
                     </div>
                   </div>

@@ -22,6 +22,8 @@ import { getUserById } from "@/lib/users";
 import { toggleNavbarMobile, updateCart } from "@/redux/features/isSlice";
 import { clearCart } from "@/lib/cart";
 import { IoMdNotificationsOutline } from "react-icons/io";
+import { getOrdersByUser } from "@/lib/orders";
+import { formatCurrency } from "@/utils/constants";
 
 const Header = () => {
   const { data: session, status } = useSession();
@@ -97,9 +99,10 @@ const Header = () => {
     }
   }, []);
 
+  console.log("usser", user);
   return (
     <nav
-      className={`fixed top-0 right-0  left-0 bg-white flex w-full space-x-4 h-[64px] items-center lg:px-40 px-2 shadow-md border z-[500]`}
+      className={`fixed top-0 right-0  left-0 bg-white flex w-full space-x-2 space-x-4 h-[64px] items-center lg:px-40 px-2 shadow-md border z-[500]`}
     >
       <div className="flex lg:flex-1 flex-0 items-center text-black h-[40px]">
         <Logo />
@@ -195,6 +198,87 @@ const Header = () => {
                 <button className="p-1 hover:bg-gray-100 rounded-full">
                   <IoMdNotificationsOutline />
                 </button>
+                <div
+                  className={`${
+                    user?.orders?.length! > 0 ? "scale-100" : "scale-0"
+                  } transition-all duration-500 ease-in-out absolute top-[0%] right-[-20%] rounded-full bg-red-500 shadow-md w-5 h-5 flex justify-center items-center`}
+                >
+                  <h1 className="text-semibold text-white text-xs">
+                    {user?.orders?.length}
+                  </h1>
+                </div>
+
+                <div className="group-hover:block hidden absolute top-[100%] right-0 after:absolute after:top-[-10%] after:right-0 after:left-0 after:h-10 after:bg-transparent ">
+                  <div className="w-[28rem] border flex flex-col bg-white shadow-md max-h-[20rem] overflow-y-scroll scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-400">
+                    <div className="flex justify-between px-4 items-center py-2 border-b-2">
+                      <Link href="/order">
+                        <h1 className="cursor-pointer text-sm">Đơn hàng</h1>
+                      </Link>
+                    </div>
+                    {user?.cart?.length === 0 ? (
+                      <Image
+                        className="w-full h-[15rem]"
+                        width={500}
+                        height={500}
+                        alt=""
+                        src={require("@/resources/images/empty-cart.png")}
+                      />
+                    ) : (
+                      <div className="overflow-y-scroll scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
+                        {user?.orders?.map((item) => (
+                          <Link
+                            href={`/orders/${item.id}`}
+                            key={item.id as string}
+                            className="flex space-x-4 justify-start text-sm items-center  hover:bg-gray-100 cursor-pointer p-2 h-24"
+                          >
+                            <div className="grid grid-cols-2">
+                              {item?.products?.map(({ product }) => (
+                                <Image
+                                  src={product?.files[0].url! || ""}
+                                  width={500}
+                                  height={500}
+                                  alt=""
+                                  className="w-fit h-full"
+                                />
+                              ))}
+                            </div>
+                            <div className="flex flex-col">
+                              <div className="flex w-full space-x-2">
+                                <h2>Mã đơn hàng :</h2>
+                                <h1 className="text-sm font-semibold">
+                                  {item.id}
+                                </h1>
+                              </div>
+                              <div className="flex w-full space-x-2">
+                                <h2>Trạng thái :</h2>
+                                {item.status === "PENDING" && (
+                                  <h1 className="text-sm font-semibold text-yellow-400 ">
+                                    Chờ xác nhận
+                                  </h1>
+                                )}
+                              </div>
+                              <div className="flex w-full space-x-2">
+                                <h2>Số lượng :</h2>
+                                <h1 className="text-sm font-semibold">
+                                  {item.products?.reduce(
+                                    (acc, curr) => acc + curr.amount,
+                                    0
+                                  )}
+                                </h1>
+                              </div>
+                              <div className="flex w-full space-x-2">
+                                <h2>Thành tiền :</h2>
+                                <h1 className="text-sm font-semibold">
+                                  {formatCurrency({ price: item.total! })}
+                                </h1>
+                              </div>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 

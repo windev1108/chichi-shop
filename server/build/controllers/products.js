@@ -236,6 +236,7 @@ var getProductBySlug = function (req, res) { return __awaiter(void 0, void 0, vo
                             },
                             sizeList: {
                                 select: {
+                                    id: true,
                                     name: true,
                                     amount: true,
                                     price: true,
@@ -398,11 +399,11 @@ var createProduct = function (req, res) { return __awaiter(void 0, void 0, void 
 }); };
 exports.createProduct = createProduct;
 var updateProductById = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, name, descriptions, discount, sizeList, files, productExisting, product, _b, error_7;
-    return __generator(this, function (_c) {
-        switch (_c.label) {
+    var _a, name, descriptions, discount, sizeList, files, productExisting, error_7;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
             case 0:
-                _c.trys.push([0, 7, , 8]);
+                _b.trys.push([0, 8, , 9]);
                 _a = req.body, name = _a.name, descriptions = _a.descriptions, discount = _a.discount, sizeList = _a.sizeList, files = _a.files;
                 return [4 /*yield*/, prisma.product.findUnique({
                         where: {
@@ -412,11 +413,44 @@ var updateProductById = function (req, res) { return __awaiter(void 0, void 0, v
                         }
                     })];
             case 1:
-                productExisting = _c.sent();
+                productExisting = _b.sent();
                 if (!(productExisting && productExisting.id !== req.params.id)) return [3 /*break*/, 2];
                 res.status(200).json({ message: "Tên sản phẩm này đã tồn tại", success: false });
+                return [3 /*break*/, 7];
+            case 2:
+                if (!files) return [3 /*break*/, 4];
+                return [4 /*yield*/, prisma.product.update({
+                        where: {
+                            id: req.params.id
+                        },
+                        data: {
+                            name: name,
+                            discount: discount,
+                            descriptions: descriptions,
+                            slug: (0, slugify_1.default)(name, {
+                                lower: true
+                            }),
+                            sizeList: {
+                                deleteMany: {},
+                                createMany: {
+                                    data: sizeList
+                                }
+                            },
+                            files: {
+                                deleteMany: {},
+                                createMany: {
+                                    data: files
+                                }
+                            }
+                        },
+                        select: {
+                            id: true
+                        }
+                    })];
+            case 3:
+                _b.sent();
                 return [3 /*break*/, 6];
-            case 2: return [4 /*yield*/, prisma.product.update({
+            case 4: return [4 /*yield*/, prisma.product.update({
                     where: {
                         id: req.params.id
                     },
@@ -438,29 +472,18 @@ var updateProductById = function (req, res) { return __awaiter(void 0, void 0, v
                         id: true
                     }
                 })];
-            case 3:
-                product = _c.sent();
-                _b = files.length > 0;
-                if (!_b) return [3 /*break*/, 5];
-                return [4 /*yield*/, prisma.file.updateMany({
-                        where: {
-                            productId: product.id
-                        },
-                        data: files
-                    })];
-            case 4:
-                _b = (_c.sent());
-                _c.label = 5;
             case 5:
-                _b;
+                _b.sent();
+                _b.label = 6;
+            case 6:
                 res.status(200).json({ message: "Cập nhật sản phẩm thành công", success: true });
-                _c.label = 6;
-            case 6: return [3 /*break*/, 8];
-            case 7:
-                error_7 = _c.sent();
+                _b.label = 7;
+            case 7: return [3 /*break*/, 9];
+            case 8:
+                error_7 = _b.sent();
                 res.status(500).json({ message: error_7.message });
-                return [3 /*break*/, 8];
-            case 8: return [2 /*return*/];
+                return [3 /*break*/, 9];
+            case 9: return [2 /*return*/];
         }
     });
 }); };

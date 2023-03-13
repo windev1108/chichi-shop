@@ -4,7 +4,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 // @ts-ignore
-var users_ts_1 = require("../controllers/users.js");
+var cart_ts_1 = require("../controllers/cart.ts");
+// @ts-ignore
+var users_ts_1 = require("../controllers/users.ts");
 var express_1 = __importDefault(require("express"));
 var router = express_1.default.Router();
 // get all users
@@ -17,4 +19,15 @@ router.post('/', users_ts_1.createUser);
 router.put('/:id', users_ts_1.updateUserById);
 // delete user
 router.delete('/:id', users_ts_1.deleteUserById);
+// get cart 
+router.get('/:userId/cart', cart_ts_1.getCart);
+// add To cart
+router.post('/:userId/cart', cart_ts_1.addProductToCart);
+// update cart
+router.put('/:userId/cart/:productId', cart_ts_1.updateCart);
+router.delete('/:userId/cart/:productId', cart_ts_1.removeProductOutCart);
+// remove product
+router.delete('/:userId/cart', cart_ts_1.clearCart);
+router.get('/:userId/cart/:productId/plus', cart_ts_1.plusProductItem);
+router.get('/:userId/cart/:productId/takeAway', cart_ts_1.takeAwayProductItem);
 exports.default = router;

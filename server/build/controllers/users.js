@@ -1,4 +1,15 @@
 "use strict";
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -58,48 +69,153 @@ var getUsers = function (_req, res) { return __awaiter(void 0, void 0, void 0, f
 }); };
 exports.getUsers = getUsers;
 var getUserById = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var user, error_1;
+    var user, orders, error_1;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
-                _a.trys.push([0, 2, , 3]);
+                _a.trys.push([0, 5, , 6]);
                 return [4 /*yield*/, prisma.user.findUnique({
                         where: {
                             id: req.params.id
                         },
-                        select: {
-                            id: true,
-                            name: true,
-                            address: true,
-                            email: true,
-                            gender: true,
-                            password: true,
-                            phone: true,
-                            isAdmin: true,
-                            createdAt: true,
+                        include: {
+                            address: {
+                                select: {
+                                    provinceId: true,
+                                    districtId: true,
+                                    wardId: true,
+                                    street: true,
+                                    districtName: true,
+                                    provinceName: true,
+                                    wardName: true
+                                }
+                            },
                             image: {
                                 select: {
                                     url: true,
                                     type: true,
                                     publicId: true
                                 }
+                            },
+                            cart: {
+                                select: {
+                                    amount: true,
+                                    product: {
+                                        select: {
+                                            name: true,
+                                            slug: true,
+                                            discount: true,
+                                            sizeList: {
+                                                select: {
+                                                    id: true,
+                                                    name: true,
+                                                    price: true,
+                                                    amount: true
+                                                }
+                                            },
+                                            files: {
+                                                select: {
+                                                    url: true,
+                                                },
+                                                take: 1
+                                            }
+                                        }
+                                    },
+                                    size: {
+                                        select: {
+                                            name: true,
+                                            amount: true,
+                                            price: true,
+                                        }
+                                    }
+                                }
+                            },
+                            orders: {
+                                include: {
+                                    status: true,
+                                    products: {
+                                        include: {
+                                            size: true,
+                                            product: {
+                                                include: {
+                                                    files: {
+                                                        select: {
+                                                            url: true
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                        }
+                                    },
+                                    user: {
+                                        select: {
+                                            name: true,
+                                            id: true,
+                                            address: true,
+                                            image: {
+                                                select: {
+                                                    url: true
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                orderBy: {
+                                    createdAt: "desc"
+                                }
                             }
                         }
                     })];
             case 1:
                 user = _a.sent();
-                if (user) {
-                    res.status(200).json({ user: user });
-                }
-                else {
-                    res.status(204).json({ user: null, message: "Not found user" });
-                }
-                return [3 /*break*/, 3];
+                if (!(user === null || user === void 0 ? void 0 : user.isAdmin)) return [3 /*break*/, 3];
+                return [4 /*yield*/, prisma.order.findMany({
+                        orderBy: {
+                            createdAt: "desc"
+                        },
+                        include: {
+                            status: true,
+                            products: {
+                                include: {
+                                    size: true,
+                                    product: {
+                                        include: {
+                                            files: {
+                                                select: {
+                                                    url: true
+                                                }
+                                            }
+                                        }
+                                    },
+                                }
+                            },
+                            user: {
+                                select: {
+                                    name: true,
+                                    id: true,
+                                    address: true,
+                                    image: {
+                                        select: {
+                                            url: true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    })];
             case 2:
+                orders = _a.sent();
+                res.status(200).json({ user: __assign(__assign({}, user), { orders: orders, cart: user === null || user === void 0 ? void 0 : user.cart.reverse() }) });
+                return [3 /*break*/, 4];
+            case 3:
+                res.status(200).json({ user: __assign(__assign({}, user), { cart: user === null || user === void 0 ? void 0 : user.cart.reverse() }) });
+                _a.label = 4;
+            case 4: return [3 /*break*/, 6];
+            case 5:
                 error_1 = _a.sent();
                 res.status(500).end();
-                return [3 /*break*/, 3];
-            case 3: return [2 /*return*/];
+                return [3 /*break*/, 6];
+            case 6: return [2 /*return*/];
         }
     });
 }); };
@@ -139,13 +255,13 @@ var createUser = function (req, res) { return __awaiter(void 0, void 0, void 0, 
 }); };
 exports.createUser = createUser;
 var updateUserById = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, name, password, gender, address, phone, image, error_3;
+    var _a, name, password, gender, address, phone, image, user, user, error_3;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
-                _b.trys.push([0, 5, , 6]);
+                _b.trys.push([0, 13, , 14]);
                 _a = req.body, name = _a.name, password = _a.password, gender = _a.gender, address = _a.address, phone = _a.phone, image = _a.image;
-                if (!image) return [3 /*break*/, 2];
+                if (!image) return [3 /*break*/, 6];
                 return [4 /*yield*/, prisma.user.update({
                         where: {
                             id: req.params.id
@@ -154,18 +270,37 @@ var updateUserById = function (req, res) { return __awaiter(void 0, void 0, void
                             name: name,
                             password: password,
                             gender: gender,
-                            address: address,
                             phone: phone,
                             image: {
                                 create: image
-                            }
+                            },
+                        },
+                        select: {
+                            address: true
                         }
                     })];
             case 1:
+                user = _b.sent();
+                if (!user.address) return [3 /*break*/, 3];
+                return [4 /*yield*/, prisma.address.update({
+                        where: {
+                            userId: req.params.id
+                        },
+                        data: address
+                    })];
+            case 2:
                 _b.sent();
+                return [3 /*break*/, 5];
+            case 3: return [4 /*yield*/, prisma.address.create({
+                    data: __assign(__assign({}, address), { userId: req.params.id })
+                })];
+            case 4:
+                _b.sent();
+                _b.label = 5;
+            case 5:
                 res.status(200).json({ message: "Cập nhật thông tin thành công", success: true });
-                return [3 /*break*/, 4];
-            case 2: return [4 /*yield*/, prisma.user.update({
+                return [3 /*break*/, 12];
+            case 6: return [4 /*yield*/, prisma.user.update({
                     where: {
                         id: req.params.id
                     },
@@ -173,20 +308,39 @@ var updateUserById = function (req, res) { return __awaiter(void 0, void 0, void
                         name: name,
                         password: password,
                         gender: gender,
-                        address: address,
                         phone: phone,
+                    },
+                    select: {
+                        address: true
                     }
                 })];
-            case 3:
+            case 7:
+                user = _b.sent();
+                if (!user.address) return [3 /*break*/, 9];
+                return [4 /*yield*/, prisma.address.update({
+                        where: {
+                            userId: req.params.id
+                        },
+                        data: address
+                    })];
+            case 8:
                 _b.sent();
+                return [3 /*break*/, 11];
+            case 9: return [4 /*yield*/, prisma.address.create({
+                    data: __assign(__assign({}, address), { userId: req.params.id })
+                })];
+            case 10:
+                _b.sent();
+                _b.label = 11;
+            case 11:
                 res.status(200).json({ message: "Cập nhật thông tin thành công", success: true });
-                _b.label = 4;
-            case 4: return [3 /*break*/, 6];
-            case 5:
+                _b.label = 12;
+            case 12: return [3 /*break*/, 14];
+            case 13:
                 error_3 = _b.sent();
                 res.status(500).json({ message: error_3.message });
-                return [3 /*break*/, 6];
-            case 6: return [2 /*return*/];
+                return [3 /*break*/, 14];
+            case 14: return [2 /*return*/];
         }
     });
 }); };

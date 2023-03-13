@@ -38,7 +38,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createEightStatus = exports.createSevenStatus = exports.createSixStatus = exports.createFiveStatus = exports.createFourStatus = exports.createThirdStatus = exports.createSecondStatus = exports.createFirstStatus = exports.deleteOrder = exports.updateOrder = exports.createOrder = exports.getOrderById = exports.getOrdersByUser = exports.getOrders = void 0;
 // @ts-ignore
-var constants_ts_1 = require("../utils/constants.ts");
+var constants_ts_1 = require("../utils/constants.js");
 var client_1 = require("@prisma/client");
 var prisma = new client_1.PrismaClient();
 var getOrders = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {

@@ -73,7 +73,7 @@ model User {
 model Product {
   id           String         @id @default(cuid())
   name         String         @unique
-  category     String?        @db.Text
+  category     Category? 
   discount     Int?
   descriptions String?        @db.LongText
   sizeList     Size[]
@@ -199,8 +199,14 @@ model Status {
   name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  order     Order?   @relation(fields: [orderId], references: [id])
+  order     Order?   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderId   Int?
 
   @@index([orderId])
+}
+
+
+enum Category {
+   MATERIAL
+   BRACELET
 }

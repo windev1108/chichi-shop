@@ -58,7 +58,7 @@ const Orders: NextPage<{ user: User }> = ({ user }) => {
 
   return (
     <Layout>
-      <div className="grid grid-cols-9 m-40 gap-2">
+      <div className="grid grid-cols-9 m-40 gap-2 h-screen">
         <Navigation user={user} />
         <div className="col-span-7 space-y-4">
           <div className="flex justify-around shadow-md h-12 items-center">

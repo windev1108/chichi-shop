@@ -36,7 +36,7 @@ export const getServerSideProps = async ({
   });
 
   const { product } = await getProductBySlug({ slug: query.slug as string });
-  const { user } = await getUserById({id: session?.user?.id})
+  const { user } = await getUserById({ id: session?.user?.id });
 
   if (!session?.user || !user.isAdmin) {
     return {
@@ -75,6 +75,7 @@ const Manager: NextPage<{
     discount: number;
     blobFiles: { url?: string; type?: string; file?: any }[];
     isLoading?: boolean;
+    category: string;
     sizeSlot?: {
       id?: number | string;
       amount?: number;
@@ -87,16 +88,25 @@ const Manager: NextPage<{
     discount: 0,
     blobFiles: [],
     sizeSlot: [],
+    category: "",
     isLoading: false,
   });
-  const { name, descriptions, discount, blobFiles, sizeSlot, isLoading } = form;
+  const {
+    name,
+    descriptions,
+    discount,
+    category,
+    blobFiles,
+    sizeSlot,
+    isLoading,
+  } = form;
   const formRef = useRef<HTMLFormElement | any>(null);
 
   const handleAddProduct = React.useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
       try {
-        if (!name || sizeSlot?.length === 0 || blobFiles.length === 0) {
+        if (!name || !category || sizeSlot?.length === 0 || blobFiles.length === 0) {
           toast.error("Vui lòng nhập đầy đủ thông tin");
         } else {
           if (
@@ -111,6 +121,7 @@ const Manager: NextPage<{
                 name,
                 discount,
                 descriptions,
+                category,
                 files,
                 sizeList: sizeSlot.map(({ name, amount, price }) => {
                   return {
@@ -126,6 +137,7 @@ const Manager: NextPage<{
                 ...form,
                 name: "",
                 descriptions: "",
+                category: "",
                 discount: 0,
                 blobFiles: [],
                 sizeSlot: [],
@@ -144,7 +156,7 @@ const Manager: NextPage<{
         toast.error(error.message);
       }
     },
-    [name, discount, descriptions, blobFiles, sizeSlot]
+    [name, discount, descriptions, category , blobFiles, sizeSlot]
   );
 
   const onChangeFile = (e: any) => {
@@ -250,6 +262,7 @@ const Manager: NextPage<{
         descriptions: formatTextRendering({ text: product.descriptions }),
         discount: product.discount!,
         blobFiles: product.files!,
+        category: product?.category!,
         sizeSlot: product.sizeList.map((size, index) => {
           return {
             ...size,
@@ -307,6 +320,32 @@ const Manager: NextPage<{
                 type="number"
                 placeholder="Nhập %"
               />
+            </div>
+
+            <div className="flex flex-col">
+              <label className="font-semibold my-2" htmlFor="name">
+                Danh mục sản phẩm
+                <span className="inline-block mx-2 text-xs font-normal text-gray-500">
+                  (Optional)
+                </span>
+              </label>
+              <select
+              className="border px-4 py-2 outline-none"
+                onChange={({target}) =>
+                  setForm({ ...form, category: target.value })
+                }
+                value={category}
+              >
+                <option value="" hidden>
+                  Chọn danh mục sản phẩm
+                </option>
+                <option value="BRACELET">
+                  Vòng tay
+                </option>
+                <option value="MATERIAL">
+                  Nguyên liệu
+                </option>
+              </select>
             </div>
 
             <div className="flex flex-col">

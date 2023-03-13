@@ -301,19 +301,15 @@ const CartPage: NextPage = () => {
           </div>
           {cart.length === 0 ? (
             <div className="flex justify-center items-center my-40">
-              {!isLoading ? (
-                <div className="flex justify-center items-center">
-                  <Image
-                    src={require("@/resources/images/empty-cart.png")}
-                    alt=""
-                    width={500}
-                    height={500}
-                    className="w-80 h-80 object-contain"
-                  />
-                </div>
-              ) : (
-                <AiOutlineLoading3Quarters className="text-4xl text-blue-500 animate-spin duration-500 ease-linear" />
-              )}
+              <div className="flex justify-center items-center">
+                <Image
+                  src={require("@/resources/images/empty-cart.png")}
+                  alt=""
+                  width={500}
+                  height={500}
+                  className="w-80 h-80 object-contain"
+                />
+              </div>
             </div>
           ) : (
             <>

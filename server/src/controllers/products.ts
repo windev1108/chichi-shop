@@ -163,6 +163,7 @@ export const getProductBySlug = async (req: Request, res: Response): Promise<any
                 },
                 sizeList: {
                     select: {
+                        id: true,
                         name: true,
                         amount: true,
                         price: true,
@@ -313,34 +314,60 @@ export const updateProductById = async (req: Request, res: Response): Promise<an
         if (productExisting && productExisting.id !== req.params.id) {
             res.status(200).json({ message: "Tên sản phẩm này đã tồn tại", success: false })
         } else {
-            const product = await prisma.product.update({
-                where: {
-                    id: req.params.id
-                },
-                data: {
-                    name,
-                    discount,
-                    descriptions,
-                    slug: slugify(name, {
-                        lower: true
-                    }),
-                    sizeList: {
-                        deleteMany: {},
-                        createMany: {
-                            data: sizeList
+            if (files) {
+                await prisma.product.update({
+                    where: {
+                        id: req.params.id
+                    },
+                    data: {
+                        name,
+                        discount,
+                        descriptions,
+                        slug: slugify(name, {
+                            lower: true
+                        }),
+                        sizeList: {
+                            deleteMany: {},
+                            createMany: {
+                                data: sizeList
+                            }
+                        },
+                        files: {
+                            deleteMany: {},
+                            createMany: {
+                                data: files
+                            }
                         }
                     },
-                },
-                select: {
-                    id: true
-                }
-            })
-            files.length > 0 && await prisma.file.updateMany({
-                where: {
-                    productId: product.id
-                },
-                data: files
-            })
+                    select: {
+                        id: true
+                    }
+                })
+            } else {
+                await prisma.product.update({
+                    where: {
+                        id: req.params.id
+                    },
+                    data: {
+                        name,
+                        discount,
+                        descriptions,
+                        slug: slugify(name, {
+                            lower: true
+                        }),
+                        sizeList: {
+                            deleteMany: {},
+                            createMany: {
+                                data: sizeList
+                            }
+                        },
+                    },
+                    select: {
+                        id: true
+                    }
+                })
+            }
+
 
             res.status(200).json({ message: "Cập nhật sản phẩm thành công", success: true })
 

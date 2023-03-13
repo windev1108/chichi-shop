@@ -24,6 +24,11 @@ import { useAppDispatch } from "@/redux/hook";
 import { updateProfile } from "@/redux/features/isSlice";
 import { useSession } from "next-auth/react";
 import { getDistrict, getProvince, getWard } from "@/lib/ghn";
+import { FiEdit2 } from "react-icons/fi";
+import { BiUser } from "react-icons/bi";
+import { IoMdListBox } from "react-icons/io";
+import Link from "next/link";
+import Navigation from "@/components/Nav/Navigation";
 
 export const getServerSideProps = async ({
   req,
@@ -257,13 +262,13 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
     }
   };
 
-  console.log("state", state);
   return (
     <Layout>
-      <div className="p-40 flex justify-center bg-gray-200">
+      <div className="grid grid-cols-9 m-40 gap-6">
+        <Navigation user={user} />
         <form
           onSubmit={handleSubmit}
-          className="flex flex-col w-[50vw] space-y-4 border p-8 rounded-lg shadow-md bg-white"
+          className="col-span-7 flex flex-col  space-y-4 p-8 rounded-lg"
         >
           <div className="flex justify-center items-center">
             {status === "authenticated" && session?.user?.id === user?.id ? (

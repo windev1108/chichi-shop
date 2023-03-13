@@ -110,8 +110,8 @@ const SignIn = () => {
     const rememberData = JSON.parse(localStorage.getItem("rememberMe")!);
     setForm({
       ...form,
-      email: rememberData.email,
-      password: rememberData.password,
+      email: rememberData?.email ?? "",
+      password: rememberData?.password ?? "",
       hasRemember: Boolean(rememberData),
     });
   }, []);

@@ -21,9 +21,11 @@ import { useRouter } from "next/router";
 import { getUserById } from "@/lib/users";
 import { toggleNavbarMobile, updateCart } from "@/redux/features/isSlice";
 import { clearCart } from "@/lib/cart";
-import { IoMdNotificationsOutline } from "react-icons/io";
-import { getOrdersByUser } from "@/lib/orders";
+import { IoMdListBox } from "react-icons/io";
 import { formatCurrency } from "@/utils/constants";
+import { MdDeliveryDining, MdOutlineCancel } from "react-icons/md";
+import { BsBox } from "react-icons/bs";
+import { HiInboxIn } from "react-icons/hi";
 
 const Header = () => {
   const { data: session, status } = useSession();
@@ -32,7 +34,7 @@ const Header = () => {
   const [keyword, setKeywords] = useState<string>("");
   const [foundProducts, setFoundProducts] = useState<Product[]>([]);
   const debounceKeywords = useDebounce(keyword, 300);
-  const { isUpdatedCard, isUpdateProfile } = useAppSelector(
+  const { isUpdatedCard, isUpdateProfile, isUpdateRealtime } = useAppSelector(
     (state) => state.isSlice
   );
   const [user, setUser] = useState<User | null>({});
@@ -53,7 +55,7 @@ const Header = () => {
         setUser(user)
       );
     }
-  }, [isUpdateProfile, isUpdatedCard]);
+  }, [isUpdateProfile, isUpdatedCard, isUpdateRealtime]);
 
   const handleSubmitSearch = React.useCallback(
     (e: React.FormEvent) => {
@@ -99,10 +101,10 @@ const Header = () => {
     }
   }, []);
 
-  console.log("usser", user);
+
   return (
     <nav
-      className={`fixed top-0 right-0  left-0 bg-white flex w-full space-x-2 space-x-4 h-[64px] items-center lg:px-40 px-2 shadow-md border z-[500]`}
+      className={`fixed top-0 right-0  left-0 bg-white flex w-full space-x-2 h-[64px] items-center lg:px-40 px-2 shadow-md border z-[500]`}
     >
       <div className="flex lg:flex-1 flex-0 items-center text-black h-[40px]">
         <Logo />
@@ -196,7 +198,7 @@ const Header = () => {
             {status === "authenticated" && (
               <div className="group relative z-[100]">
                 <button className="p-1 hover:bg-gray-100 rounded-full">
-                  <IoMdNotificationsOutline />
+                  <IoMdListBox className="text-blue-400" />
                 </button>
                 <div
                   className={`${
@@ -208,14 +210,18 @@ const Header = () => {
                   </h1>
                 </div>
 
-                <div className="group-hover:block hidden absolute top-[100%] right-0 after:absolute after:top-[-10%] after:right-0 after:left-0 after:h-10 after:bg-transparent ">
+                <div className="group-hover:block hidden absolute top-[100%] right-0 after:absolute after:top-[-15%] after:right-0 after:left-0 after:h-4 after:bg-transparent ">
                   <div className="w-[28rem] border flex flex-col bg-white shadow-md max-h-[20rem] overflow-y-scroll scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-400">
                     <div className="flex justify-between px-4 items-center py-2 border-b-2">
-                      <Link href="/order">
-                        <h1 className="cursor-pointer text-sm">Đơn hàng</h1>
+                      <Link
+                        href="/orders"
+                        className="flex space-x-2 items-center cursor-pointer"
+                      >
+                        <IoMdListBox className="text-blue-400" />
+                        <h1 className="text-sm">Đơn hàng</h1>
                       </Link>
                     </div>
-                    {user?.cart?.length === 0 ? (
+                    {user?.orders?.length === 0 ? (
                       <Image
                         className="w-full h-[15rem]"
                         width={500}
@@ -228,22 +234,11 @@ const Header = () => {
                         {user?.orders?.map((item) => (
                           <Link
                             href={`/orders/${item.id}`}
-                            key={item.id as string}
-                            className="flex space-x-4 justify-start text-sm items-center  hover:bg-gray-100 cursor-pointer p-2 h-24"
+                            key={item.id as number}
+                            className="flex justify-start text-sm items-center  hover:bg-gray-100 cursor-pointer p-2 h-24 border-b"
                           >
-                            <div className="grid grid-cols-2">
-                              {item?.products?.map(({ product }) => (
-                                <Image
-                                  src={product?.files[0].url! || ""}
-                                  width={500}
-                                  height={500}
-                                  alt=""
-                                  className="w-fit h-full"
-                                />
-                              ))}
-                            </div>
                             <div className="flex flex-col">
-                              <div className="flex w-full space-x-2">
+                              <div className="flex w-full space-x-2 whitespace-nowrap">
                                 <h2>Mã đơn hàng :</h2>
                                 <h1 className="text-sm font-semibold">
                                   {item.id}
@@ -251,11 +246,7 @@ const Header = () => {
                               </div>
                               <div className="flex w-full space-x-2">
                                 <h2>Trạng thái :</h2>
-                                {item.status === "PENDING" && (
-                                  <h1 className="text-sm font-semibold text-yellow-400 ">
-                                    Chờ xác nhận
-                                  </h1>
-                                )}
+                                  <h1>{item?.status && item?.status[item.status?.length - 1].name}</h1> 
                               </div>
                               <div className="flex w-full space-x-2">
                                 <h2>Số lượng :</h2>
@@ -267,9 +258,11 @@ const Header = () => {
                                 </h1>
                               </div>
                               <div className="flex w-full space-x-2">
-                                <h2>Thành tiền :</h2>
+                                <h2>Tổng thanh toán :</h2>
                                 <h1 className="text-sm font-semibold">
-                                  {formatCurrency({ price: item.total! })}
+                                  {formatCurrency({
+                                    price: item.totalPayment!,
+                                  })}
                                 </h1>
                               </div>
                             </div>
@@ -296,7 +289,7 @@ const Header = () => {
                     {user?.cart?.length}
                   </h1>
                 </div>
-                <div className="group-hover:block hidden absolute top-[100%] right-0 after:absolute after:top-[-10%] after:right-0 after:left-0 after:h-10 after:bg-transparent ">
+                <div className="group-hover:block hidden absolute top-[100%] right-0 after:absolute after:top-[-5%] after:right-0 after:left-0 after:h-4 after:bg-transparent ">
                   <div className="w-[28rem] border flex flex-col bg-white shadow-md max-h-[20rem] overflow-y-scroll scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-400">
                     <div className="flex justify-between px-4 items-center py-1 border-b-2">
                       <Link href="/cart">

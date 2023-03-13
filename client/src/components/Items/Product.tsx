@@ -62,8 +62,8 @@ const ProductItem: NextPage<{
               >
                 {" "}
                 {currencyFormatter.format(
-                  Math.floor(+(price - (price / 100) * discount) / 10000) *
-                    10000,
+                  Math.floor(+(price - (price / 100) * discount) / 1000) *
+                    1000,
                   {
                     code: "VND",
                   }

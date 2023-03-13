@@ -86,13 +86,14 @@ export interface Cart {
 
 
 export interface Order {
-    id?: string
+    id?: number
     user?: User
     userId?: string
-    feeShip?: number
-    total?: number
+    methodPayment?: number
+    transportFee?: number
+    totalPayment?: number
     products?: ProductOrder[]
-    status?: Status | string
+    status?: Status[]
     message?: string
     createdAt?: string
 }
@@ -115,12 +116,9 @@ export interface TransportMethod {
 }
 
 
-enum Status {
-    PENDING,
-    FULFILLED,
-    REJECTED,
-    PREPARING,
-    DELIVERING,
-    SUCCESS,
-    FAILED,
-  }
+export interface Status {
+    id?: string
+    name: string
+    step: number
+    createdAt: string
+}

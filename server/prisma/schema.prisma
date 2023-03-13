@@ -56,9 +56,8 @@ model User {
   name          String?   @db.Text
   password      String?   @db.Text
   image         File?
-  phone         Int?      @db.Int
+  phone         String?   @db.Text
   gender        String?   @db.Text
-  address       String?   @db.Text
   isAdmin       Boolean?  @default(false)
   createdAt     DateTime? @default(now())
   updatedAt     DateTime? @updatedAt
@@ -66,21 +65,29 @@ model User {
   reviews       Review[]
   accounts      Account[]
   sessions      Session[]
+  orders        Order[]
+  cart          Cart[]
+  address       Address?
 }
 
 model Product {
-  id           String   @id @default(cuid())
-  name         String   @unique
-  category     String?  @db.Text
+  id           String         @id @default(cuid())
+  name         String         @unique
+  category     String?        @db.Text
   discount     Int?
-  descriptions String?  @db.LongText
+  descriptions String?        @db.LongText
   sizeList     Size[]
   sold         Int?
-  slug         String   @unique
+  slug         String         @unique
   files        File[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
   reviews      Review[]
+  orderId      String?
+  cart         Cart[]
+  productOrder ProductOrder[]
+
+  @@index([orderId])
 }
 
 model File {
@@ -92,7 +99,7 @@ model File {
   updatedAt DateTime @updatedAt
   product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
   user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String? @unique
+  userId    String?  @unique
   productId String?
 
   @@index([productId])
@@ -114,12 +121,86 @@ model Review {
 }
 
 model Size {
-  id        String   @id @default(cuid())
-  name      String?
-  price     Int?
-  product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
-  amount    Int?
-  productId String?
+  id           String         @id @default(cuid())
+  name         String?
+  price        Int?
+  product      Product?       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  amount       Int?
+  productId    String?
+  cart         Cart[]
+  ProductOrder ProductOrder[]
 
   @@index([productId])
+}
+
+model Cart {
+  size      Size?    @relation(fields: [sizeId], references: [id], onDelete: Cascade)
+  amount    Int?
+  userId    String
+  productId String
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sizeId    String
+
+  @@id([userId, productId])
+  @@index([productId])
+  @@index([userId])
+  @@index([sizeId])
+}
+
+model Order {
+  id           Int            @id
+  products     ProductOrder[]
+  user         User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String?
+  status       Status[]
+  totalPayment Int?
+  transportFee Int?
+  message      String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([userId])
+}
+
+model ProductOrder {
+  id        String  @id @default(cuid())
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+  amount    Int?
+  size      Size?   @relation(fields: [sizeId], references: [id], onDelete: Cascade)
+  sizeId    String?
+  order     Order?  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   Int?
+
+  @@index([productId])
+  @@index([orderId])
+  @@index([sizeId])
+}
+
+model Address {
+  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  provinceId   Int?
+  provinceName String?
+  districtId   Int?
+  districtName String?
+  wardId       Int?
+  wardName     String?
+  street       String?
+
+  @@id([userId])
+  @@index([userId])
+}
+
+model Status {
+  id        String   @id @default(cuid())
+  step      Int
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  order     Order?   @relation(fields: [orderId], references: [id])
+  orderId   Int?
+
+  @@index([orderId])
 }

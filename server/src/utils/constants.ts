@@ -6,3 +6,7 @@ export const formatReviews = (reviews: { point: number }[]) => {
     );
     return Math.round(results * 2) / 2;
 };
+
+export const randomNumberId = () => {
+    return Math.floor(100000000 + Math.random() * 900000000);
+}

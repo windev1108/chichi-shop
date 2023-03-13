@@ -20,29 +20,133 @@ export const getUserById = async (req: Request, res: Response): Promise<any> => 
             where: {
                 id: req.params.id
             },
-            select: {
-                id: true,
-                name: true,
-                address: true,
-                email: true,
-                gender: true,
-                password: true,
-                phone: true,
-                isAdmin: true,
-                createdAt: true,
+            include: {
+                address: {
+                    select: {
+                        provinceId: true,
+                        districtId: true,
+                        wardId: true,
+                        street: true,
+                        districtName: true,
+                        provinceName: true,
+                        wardName: true
+                    }
+                },
                 image: {
                     select: {
                         url: true,
                         type: true,
                         publicId: true
                     }
+                },
+                cart: {
+                    select: {
+                        amount: true,
+                        product: {
+                            select: {
+                                name: true,
+                                slug: true,
+                                discount: true,
+                                sizeList: {
+                                    select: {
+                                        id: true,
+                                        name: true,
+                                        price: true,
+                                        amount: true
+                                    }
+                                },
+                                files: {
+                                    select: {
+                                        url: true,
+                                    },
+                                    take: 1
+                                }
+                            }
+                        },
+                        size: {
+                            select: {
+                                name: true,
+                                amount: true,
+                                price: true,
+                            }
+                        }
+                    }
+                },
+                orders: {
+                    include: {
+                        status: true,
+                        products: {
+                            include: {
+                                size: true,
+                                product: {
+                                    include: {
+                                        files: {
+                                            select: {
+                                                url: true
+                                            }
+                                        }
+                                    }
+                                },
+                            }
+                        },
+                        user: {
+                            select: {
+                                name: true,
+                                id: true,
+                                address: true,
+                                image: {
+                                    select: {
+                                        url: true
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    orderBy: {
+                        createdAt: "desc"
+                    }
                 }
             }
         })
-        if (user) {
-            res.status(200).json({ user })
+
+        if (user?.isAdmin) {
+            const orders = await prisma.order.findMany({
+                orderBy: {
+                    createdAt: "desc"
+                },
+                include: {
+                    status: true,
+                    products: {
+                        include: {
+                            size: true,
+                            product: {
+                                include: {
+                                    files: {
+                                        select: {
+                                            url: true
+                                        }
+                                    }
+                                }
+                            },
+                        }
+                    },
+                    user: {
+                        select: {
+                            name: true,
+                            id: true,
+                            address: true,
+                            image: {
+                                select: {
+                                    url: true
+                                }
+                            }
+                        }
+                    }
+                }
+            })
+            res.status(200).json({ user: { ...user, orders, cart: user?.cart.reverse() } })
         } else {
-            res.status(204).json({ user: null, message: "Not found user" })
+            res.status(200).json({ user: { ...user, cart: user?.cart.reverse() } })
         }
     } catch (error) {
         res.status(500).end()
@@ -76,7 +180,7 @@ export const updateUserById = async (req: Request, res: Response): Promise<any> 
     try {
         const { name, password, gender, address, phone, image } = req.body
         if (image) {
-            await prisma.user.update({
+            const user = await prisma.user.update({
                 where: {
                     id: req.params.id
                 },
@@ -84,16 +188,34 @@ export const updateUserById = async (req: Request, res: Response): Promise<any> 
                     name,
                     password,
                     gender,
-                    address,
                     phone,
                     image: {
                         create: image
-                    }
+                    },
+                },
+                select: {
+                    address: true
                 }
             })
+
+            if (user.address) {
+                await prisma.address.update({
+                    where: {
+                        userId: req.params.id as string
+                    },
+                    data: address
+                })
+            } else {
+                await prisma.address.create({
+                    data: {
+                        ...address,
+                        userId: req.params.id
+                    }
+                })
+            }
             res.status(200).json({ message: "Cập nhật thông tin thành công", success: true })
         } else {
-            await prisma.user.update({
+            const user = await prisma.user.update({
                 where: {
                     id: req.params.id
                 },
@@ -101,10 +223,28 @@ export const updateUserById = async (req: Request, res: Response): Promise<any> 
                     name,
                     password,
                     gender,
-                    address,
                     phone,
+                },
+                select: {
+                    address: true
                 }
             })
+
+            if (user.address!) {
+                await prisma.address.update({
+                    where: {
+                        userId: req.params.id as string
+                    },
+                    data: address
+                })
+            } else {
+                await prisma.address.create({
+                    data: {
+                        ...address,
+                        userId: req.params.id
+                    }
+                })
+            }
             res.status(200).json({ message: "Cập nhật thông tin thành công", success: true })
         }
 

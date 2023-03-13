@@ -1,13 +1,14 @@
 import { calculateFee, getServicePackage } from "@/lib/ghn";
 import { createOrder } from "@/lib/orders";
 import { getUserById } from "@/lib/users";
+import { toggleBackdrop, toggleUpdateRealtime, updateCart } from "@/redux/features/isSlice";
 import { setOrderModal } from "@/redux/features/orderSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import {
   formatCurrency,
-  formatCurrencyWithDiscount,
   formatDiscount,
   formatPriceWithDiscount,
+  sleep,
 } from "@/utils/constants";
 import { TransportMethod, User } from "@/utils/types";
 import { useSession } from "next-auth/react";
@@ -16,12 +17,14 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useLayoutEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-import { AiFillCopy, AiFillPlusCircle, AiOutlinePlus } from "react-icons/ai";
+import { AiFillCopy,  AiOutlinePlus } from "react-icons/ai";
 import { FaEdit } from "react-icons/fa";
 import { HiOutlineTruck } from "react-icons/hi";
 import { ImLocation } from "react-icons/im";
 import { IoMdClose } from "react-icons/io";
 import { MdPayment, MdPayments } from "react-icons/md";
+import { io , Socket } from "socket.io-client";
+const socket: Socket = io(process.env.NEXT_PUBLIC_BASE_URL as string);
 
 const OrderModal = () => {
   const dispatch = useAppDispatch();
@@ -145,7 +148,6 @@ const OrderModal = () => {
     );
   }, []);
 
-  console.log("state ", state);
   const setCloseModal = React.useCallback(() => {
     dispatch(
       setOrderModal({
@@ -172,32 +174,37 @@ const OrderModal = () => {
         return;
       }
 
-      const { success } = await createOrder({
-        order: {
-          status: "PENDING",
-          userId: user?.id!,
-          total: totalPricePayment!,
-          feeShip: transportFee!,
-          products: cart.map((item) => {
-            return {
-              productId: item?.product?.id!,
-              sizeId: item?.size?.id!,
-              amount: item?.amount!,
-            };
-          }),
-        },
+      dispatch(toggleBackdrop());
+      sleep(async () => {
+        const { success } = await createOrder({
+          order: {
+            userId: user?.id!,
+            methodPayment,
+            totalPayment: totalPricePayment!,
+            transportFee: transportFee!,
+            products: cart.map((item) => {
+              return {
+                productId: item?.product?.id!,
+                sizeId: item?.size?.id!,
+                amount: item?.amount!,
+              };
+            }),
+          },
+        });
+        dispatch(toggleBackdrop());
+        if (success) {
+          toast.success("Đơn hàng đã tạo thành công");
+          dispatch(
+            setOrderModal({
+              isOpen: false,
+              cart: [],
+            })
+          );
+          socket.emit("updateOrder")
+        } else {
+          toast.error("Đơn hàng đã tạo thất bại");
+        }
       });
-      if (success) {
-        toast.success("Đơn hàng đã tạo thành công");
-        dispatch(
-          setOrderModal({
-            isOpen: false,
-            cart: [],
-          })
-        );
-      } else {
-        toast.error("Đơn hàng đã tạo thất bại");
-      }
     } catch (error: any) {
       toast.error(error.message);
     }

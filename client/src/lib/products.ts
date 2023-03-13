@@ -8,12 +8,12 @@ export const getProductsByKeywords = async ({keyword} : { keyword : string}) => 
     return data
 }
 
-export const getProductsByPage = async ({ page }: { page: string }) => {
+export const getProductsByPage = async ({ page , type }: { page: string , type: string }) => {
     if (+page || typeof page === "undefined") {
-        const { data } = await axiosInstance.get(`/products?page=${page || 1}`)
+        const { data } = await axiosInstance.get(`/products?page=${page || 1}&type=${type}`)
         return data
     } else {
-        const { data } = await axiosInstance.get(`/products?page=${1}`)
+        const { data } = await axiosInstance.get(`/products?page=${1}&type=${type}`)
         return data
     }
 }

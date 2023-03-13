@@ -15,8 +15,8 @@ export const getServerSideProps = async ({
 }: GetServerSidePropsContext) => {
   const session: any = await getServerSession(req, res, authOptions);
   const { products, totalPage } = await getProductsByPage({
-    type: "BRACELET",
     page: query.page as string,
+    type: "MATERIAL",
   });
 
   return {
@@ -32,13 +32,14 @@ export const getServerSideProps = async ({
   };
 };
 
-const ProductsList: NextPage<{
+const Mat: NextPage<{
   products: Product[];
   totalPage: number;
   page: number;
 }> = ({ products, totalPage, page }) => {
+  console.log("totalPage,", totalPage);
+  console.log("page,", page);
 
-  
   return (
     <Layout>
       <div className="my-10 lg:px-40 md:px-20 px-4 lg:py-20 py-10">
@@ -75,7 +76,17 @@ const ProductsList: NextPage<{
         {products.length > 0 ? (
           <div className="grid lg:grid-cols-6 md:grid-cols-3 grid-cols-2 lg:gap-6 gap-2 my-12">
             {products?.map(
-              ({ slug, files, id, name, sold, discount, _count, averageRating ,sizeList }) => (
+              ({
+                slug,
+                files,
+                id,
+                name,
+                sold,
+                discount,
+                _count,
+                averageRating,
+                sizeList,
+              }) => (
                 <ProductItem
                   key={slug as string}
                   id={id as string}
@@ -106,7 +117,7 @@ const ProductsList: NextPage<{
             <div className="flex">
               {Array.from({ length: totalPage }).map((_page, index) => (
                 <Link
-                  href={`/products?page=${index + 1}`}
+                  href={`/materials?page=${index + 1}`}
                   key={index}
                   className={`${
                     +page === index + 1
@@ -125,4 +136,4 @@ const ProductsList: NextPage<{
   );
 };
 
-export default ProductsList;
+export default Mat;

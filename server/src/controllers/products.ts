@@ -7,7 +7,7 @@ const prisma = new PrismaClient()
 
 
 
-export const getProducts = async (_req: Request, res: Response): Promise<any> => {
+export const getProducts = async (req: Request, res: Response): Promise<any> => {
     try {
         const products = await prisma.product.findMany({
             include: {
@@ -26,11 +26,16 @@ export const getProducts = async (_req: Request, res: Response): Promise<any> =>
 
 export const getProductByPage = async (req: Request, res: Response): Promise<any> => {
     try {
-        const { page } = req.query
+        const { page, type } = req.query
 
         const products = await prisma.product.findMany({
             skip: (+process.env.MAX_ITEM_IN_PAGE! * +page! - +process.env.MAX_ITEM_IN_PAGE!),
             take: +process.env.MAX_ITEM_IN_PAGE!,
+            where: {
+                category: {
+                    equals: type as any
+                }
+            },
             include: {
                 files: {
                     select: {
@@ -69,7 +74,13 @@ export const getProductByPage = async (req: Request, res: Response): Promise<any
 
 
 
-        const countProducts = await prisma.product.count()
+        const countProducts = await prisma.product.count({
+            where: {
+                category: {
+                    equals: type as any
+                }
+            },
+        })
         const customProducts = products.map((product) => {
             return {
                 ...product,
@@ -260,7 +271,7 @@ export const getProductsByKeyword = async (req: Request, res: Response): Promise
 
 export const createProduct = async (req: Request, res: Response): Promise<any> => {
     try {
-        const { name, descriptions, discount, sizeList, files } = req.body
+        const { name, descriptions, discount, sizeList, category, files } = req.body
         const productExisting = await prisma.product.findUnique({
             where: {
                 slug: slugify(name, {
@@ -277,6 +288,7 @@ export const createProduct = async (req: Request, res: Response): Promise<any> =
                     name,
                     discount,
                     descriptions,
+                    category,
                     slug: slugify(name, {
                         lower: true
                     }),

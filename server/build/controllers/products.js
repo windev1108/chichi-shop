@@ -55,7 +55,7 @@ var constants_1 = require("./../utils/constants");
 var client_1 = require("@prisma/client");
 var slugify_1 = __importDefault(require("slugify"));
 var prisma = new client_1.PrismaClient();
-var getProducts = function (_req, res) { return __awaiter(void 0, void 0, void 0, function () {
+var getProducts = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var products, error_1;
     return __generator(this, function (_a) {
         switch (_a.label) {
@@ -84,15 +84,20 @@ var getProducts = function (_req, res) { return __awaiter(void 0, void 0, void 0
 }); };
 exports.getProducts = getProducts;
 var getProductByPage = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var page, products, countProducts, customProducts, error_2;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
+    var _a, page, type, products, countProducts, customProducts, error_2;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
             case 0:
-                _a.trys.push([0, 3, , 4]);
-                page = req.query.page;
+                _b.trys.push([0, 3, , 4]);
+                _a = req.query, page = _a.page, type = _a.type;
                 return [4 /*yield*/, prisma.product.findMany({
                         skip: (+process.env.MAX_ITEM_IN_PAGE * +page - +process.env.MAX_ITEM_IN_PAGE),
                         take: +process.env.MAX_ITEM_IN_PAGE,
+                        where: {
+                            category: {
+                                equals: type
+                            }
+                        },
                         include: {
                             files: {
                                 select: {
@@ -128,17 +133,23 @@ var getProductByPage = function (req, res) { return __awaiter(void 0, void 0, vo
                         }
                     })];
             case 1:
-                products = _a.sent();
-                return [4 /*yield*/, prisma.product.count()];
+                products = _b.sent();
+                return [4 /*yield*/, prisma.product.count({
+                        where: {
+                            category: {
+                                equals: type
+                            }
+                        },
+                    })];
             case 2:
-                countProducts = _a.sent();
+                countProducts = _b.sent();
                 customProducts = products.map(function (product) {
                     return __assign(__assign({}, product), { averageRating: (0, constants_1.formatReviews)(product.reviews) });
                 });
                 res.status(200).json({ products: customProducts, totalPage: countProducts / +process.env.MAX_ITEM_IN_PAGE <= 1 ? 1 : Math.floor(countProducts / +process.env.MAX_ITEM_IN_PAGE) });
                 return [3 /*break*/, 4];
             case 3:
-                error_2 = _a.sent();
+                error_2 = _b.sent();
                 res.status(500).json({ message: error_2.message });
                 return [3 /*break*/, 4];
             case 4: return [2 /*return*/];
@@ -346,12 +357,12 @@ var getProductsByKeyword = function (req, res) { return __awaiter(void 0, void 0
 }); };
 exports.getProductsByKeyword = getProductsByKeyword;
 var createProduct = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, name, descriptions, discount, sizeList, files, productExisting, error_6;
+    var _a, name, descriptions, discount, sizeList, category, files, productExisting, error_6;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
                 _b.trys.push([0, 5, , 6]);
-                _a = req.body, name = _a.name, descriptions = _a.descriptions, discount = _a.discount, sizeList = _a.sizeList, files = _a.files;
+                _a = req.body, name = _a.name, descriptions = _a.descriptions, discount = _a.discount, sizeList = _a.sizeList, category = _a.category, files = _a.files;
                 return [4 /*yield*/, prisma.product.findUnique({
                         where: {
                             slug: (0, slugify_1.default)(name, {
@@ -369,6 +380,7 @@ var createProduct = function (req, res) { return __awaiter(void 0, void 0, void 
                         name: name,
                         discount: discount,
                         descriptions: descriptions,
+                        category: category,
                         slug: (0, slugify_1.default)(name, {
                             lower: true
                         }),

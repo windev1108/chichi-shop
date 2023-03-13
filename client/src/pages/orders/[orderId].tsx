@@ -109,7 +109,7 @@ const OrderDetail: NextPage<{ order: Order; user: User }> = ({
       });
 
       if (success) {
-        setState({ ...state, isLoadingAccept: true });
+        setState({ ...state, isLoadingAccept: false });
         toast.success(message);
         router.replace(router.asPath);
         socket.emit("updateOrder");

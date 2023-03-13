@@ -32,6 +32,7 @@ export const getServerSideProps = async ({
 }: GetServerSidePropsContext) => {
   const session: any = await getServerSession(req, res, authOptions);
   const { products, totalPage } = await getProductsByPage({
+    type: query.category === "material" ? "MATERIAL" : "BRACELET",
     page: query.page as string,
   });
 
@@ -55,6 +56,7 @@ export const getServerSideProps = async ({
       queryPage: query.page || null,
       products: products || null,
       product: product || null,
+      categoryQuery: query.category || null,
       origin: `${
         req.headers.host?.includes("localhost") ? "http" : "https"
       }://${req.headers.host}`,
@@ -67,7 +69,8 @@ const Manager: NextPage<{
   product: Product;
   totalPage: number;
   queryPage: string;
-}> = ({ products, totalPage, product, queryPage }) => {
+  categoryQuery: string
+}> = ({ products, totalPage, product, queryPage , categoryQuery  }) => {
   const router = useRouter();
   const [form, setForm] = useState<{
     name: string;
@@ -106,7 +109,12 @@ const Manager: NextPage<{
     async (e: React.FormEvent) => {
       e.preventDefault();
       try {
-        if (!name || !category || sizeSlot?.length === 0 || blobFiles.length === 0) {
+        if (
+          !name ||
+          !category ||
+          sizeSlot?.length === 0 ||
+          blobFiles.length === 0
+        ) {
           toast.error("Vui lòng nhập đầy đủ thông tin");
         } else {
           if (
@@ -156,7 +164,7 @@ const Manager: NextPage<{
         toast.error(error.message);
       }
     },
-    [name, discount, descriptions, category , blobFiles, sizeSlot]
+    [name, discount, descriptions, category, blobFiles, sizeSlot]
   );
 
   const onChangeFile = (e: any) => {
@@ -273,7 +281,6 @@ const Manager: NextPage<{
     }
   }, [product]);
 
-
   return (
     <Layout>
       <div className="grid grid-cols-10 lg:gap-16 my-10 lg:px-40 px-4 lg:py-20 py-10">
@@ -330,8 +337,8 @@ const Manager: NextPage<{
                 </span>
               </label>
               <select
-              className="border px-4 py-2 outline-none"
-                onChange={({target}) =>
+                className="border px-4 py-2 outline-none"
+                onChange={({ target }) =>
                   setForm({ ...form, category: target.value })
                 }
                 value={category}
@@ -339,12 +346,8 @@ const Manager: NextPage<{
                 <option value="" hidden>
                   Chọn danh mục sản phẩm
                 </option>
-                <option value="BRACELET">
-                  Vòng tay
-                </option>
-                <option value="MATERIAL">
-                  Nguyên liệu
-                </option>
+                <option value="BRACELET">Vòng tay</option>
+                <option value="MATERIAL">Nguyên liệu</option>
               </select>
             </div>
 
@@ -499,36 +502,16 @@ const Manager: NextPage<{
           </form>
         </div>
         <div className="lg:col-span-7 col-span-10">
-          {/* <div className="flex">
-            <div className="flex space-x-2 flex-1">
-              <select
-                defaultValue=""
-                className="outline-none text-sm font-semibold shadow-md border flex space-x-2 items-center px-2 py-2 rounded-full"
-              >
-                <option value="" disabled hidden>
-                  Màu sắc
-                </option>
-                <option value="all">Tất cả</option>
-                <option value="blue">Xanh</option>
-                <option value="red">Đỏ</option>
-                <option value="purple">Tím</option>
-                <option value="yellow">Vàng</option>
-                <option value="green">Lục</option>
-                <option value="cyan">Lam</option>
-              </select>
-              <select
-                defaultValue=""
-                className="outline-none text-sm font-semibold shadow-md border flex space-x-2 items-center px-2 py-2 rounded-full"
-              >
-                <option value="" disabled hidden>
-                  Giá
-                </option>
-                <option value="price">Cao nhất</option>
-                <option value="color">Thấp nhất</option>
-              </select>
-            </div>
-          </div> */}
-
+          <div className="flex">
+            <select onChange={({target}) => {
+              router.replace(`/manager?category=${target.value}`)
+            }} 
+            value={categoryQuery}
+            className="border px-4 py-2 outline-none">
+              <option value="bracelet">Vòng tay</option>
+              <option value="material">Nguyên liệu</option>
+            </select>
+          </div>
           {products?.length > 0 ? (
             <div className="grid lg:grid-cols-5 md:grid-cols-3 grid-cols-2 lg:gap-6 gap-2 my-12">
               {products?.map(

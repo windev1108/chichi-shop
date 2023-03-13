@@ -101,7 +101,6 @@ const Header = () => {
     }
   }, []);
 
-
   return (
     <nav
       className={`fixed top-0 right-0  left-0 bg-white flex w-full space-x-2 h-[64px] items-center lg:px-40 px-2 shadow-md border z-[500]`}
@@ -109,13 +108,23 @@ const Header = () => {
       <div className="flex lg:flex-1 flex-0 items-center text-black h-[40px]">
         <Logo />
         <div className="lg:flex hidden lg:ml-20 ml-0 flex-1 space-x-4 font-semibold">
-          <Link
-            className="relative after:absolute after:origin-center after:transition-all after:duration-300 after:ease-in-out hover:after:scale-x-100 after:scale-x-0 after:w-full after:top-[100%] after:border-b-[2px] after:border-black"
-            href="/products"
-          >
-            <p>Sản phẩm</p>
-          </Link>
-
+          <div className="group relative">
+            <h1>Sản phẩm</h1>
+            <div className="group-hover:scale-100 scale-0 transition-all duration-500 origin-top-left ease-in-out absolute top-[100%] left-0 bg-white shadow-md border p-4 w-48 h-auto">
+              <Link
+                className="relative after:absolute after:origin-center after:transition-all after:duration-300 after:ease-in-out hover:after:scale-x-100 after:scale-x-0 after:w-full after:top-[100%] after:border-b-[2px] after:border-black"
+                href="/products"
+              >
+                <p>Vòng tay</p>
+              </Link>
+              <Link
+                className="relative after:absolute after:origin-center after:transition-all after:duration-300 after:ease-in-out hover:after:scale-x-100 after:scale-x-0 after:w-full after:top-[100%] after:border-b-[2px] after:border-black"
+                href="/materials"
+              >
+                <p>Trang sức</p>
+              </Link>
+            </div>
+          </div>
           <Link
             className="relative after:absolute after:origin-center after:transition-all after:duration-300 after:ease-in-out hover:after:scale-x-100 after:scale-x-0 after:w-full after:top-[100%]  after:border-b-[2px] after:border-black"
             href="#contact"
@@ -246,7 +255,10 @@ const Header = () => {
                               </div>
                               <div className="flex w-full space-x-2">
                                 <h2>Trạng thái :</h2>
-                                  <h1>{item?.status && item?.status[item.status?.length - 1].name}</h1> 
+                                <h1>
+                                  {item?.status &&
+                                    item?.status[item.status?.length - 1].name}
+                                </h1>
                               </div>
                               <div className="flex w-full space-x-2">
                                 <h2>Số lượng :</h2>

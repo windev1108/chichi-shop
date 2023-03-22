@@ -59,7 +59,7 @@ const ProductRoleAdmin: NextPage<{
             <AiFillDelete />
           )}
         </button>
-        <Link href={`${router.pathname}?slug=${slug}`}>
+        <Link href={router.query.category ? `${router.pathname}?category=${router.query.category}&slug=${slug}` : `${router.pathname}?slug=${slug}`}>
           <button
             disabled={isLoading}
             title="Sửa"

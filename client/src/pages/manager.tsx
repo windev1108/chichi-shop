@@ -69,14 +69,14 @@ const Manager: NextPage<{
   product: Product;
   totalPage: number;
   queryPage: string;
-  categoryQuery: string
-}> = ({ products, totalPage, product, queryPage , categoryQuery  }) => {
+  categoryQuery: string;
+}> = ({ products, totalPage, product, queryPage, categoryQuery }) => {
   const router = useRouter();
   const [form, setForm] = useState<{
     name: string;
     descriptions: string;
     discount: number;
-    blobFiles: { url?: string; type?: string; file?: any }[];
+    blobFiles: { url?: string; type?: string; file?: any , isBlob?: boolean }[];
     isLoading?: boolean;
     category: string;
     sizeSlot?: {
@@ -175,6 +175,7 @@ const Manager: NextPage<{
           type: file.type as string,
           url: URL.createObjectURL(file),
           file,
+          isBlob: true
         };
       });
       setForm({ ...form, blobFiles: blobs });
@@ -196,42 +197,76 @@ const Manager: NextPage<{
             sizeSlot?.every((size) => size.price)
           ) {
             setForm({ ...form, isLoading: true });
-            const files: any[] = blobFiles.every((blob) => blob.file)
+            const files: any[] = blobFiles.some((blob) => Boolean(blob?.isBlob))
               ? await uploadMultipleImage(blobFiles as any)
-              : [];
-            const { success, message } = await updateProduct({
-              productId: product?.id as string,
-              product: {
-                name,
-                discount,
-                descriptions: formatText({ text: descriptions }),
-                files,
-                sizeList: sizeSlot.map(({ name, amount, price }) => {
-                  return {
-                    name,
-                    amount,
-                    price,
-                  };
-                }),
-              },
-            });
-            if (success) {
-              setForm({
-                ...form,
-                name: "",
-                descriptions: "",
-                discount: 0,
-                blobFiles: [],
-                sizeSlot: [],
-                isLoading: false,
+              : []
+            if (files.length > 0) {
+              const { success, message } = await updateProduct({
+                productId: product?.id as string,
+                product: {
+                  name,
+                  discount,
+                  descriptions: formatText({ text: descriptions }),
+                  files,
+                  sizeList: sizeSlot.map(({ name, amount, price }) => {
+                    return {
+                      name,
+                      amount,
+                      price,
+                    };
+                  }),
+                },
               });
-              toast.success(message);
-              router.replace(router.pathname);
-              if (blobFiles.every((blob) => blob.file)) {
-                destroyMultipleImage(product.files);
+              if (success) {
+                setForm({
+                  ...form,
+                  name: "",
+                  descriptions: "",
+                  discount: 0,
+                  blobFiles: [],
+                  sizeSlot: [],
+                  isLoading: false,
+                });
+                toast.success(message);
+                router.replace(router.pathname);
+                if (blobFiles.every((blob) => blob.file)) {
+                  destroyMultipleImage(product.files!);
+                }
+              } else {
+                toast.success(message);
               }
             } else {
-              toast.success(message);
+              const { success, message } = await updateProduct({
+                productId: product?.id as string,
+                product: {
+                  files,
+                  name,
+                  discount,
+                  descriptions: formatText({ text: descriptions }),
+                  sizeList: sizeSlot.map(({ name, amount, price }) => {
+                    return {
+                      name,
+                      amount,
+                      price,
+                    };
+                  }),
+                },
+              });
+              if (success) {
+                setForm({
+                  ...form,
+                  name: "",
+                  descriptions: "",
+                  discount: 0,
+                  blobFiles: [],
+                  sizeSlot: [],
+                  isLoading: false,
+                });
+                toast.success(message);
+                router.replace(router.pathname);
+              } else {
+                toast.success(message);
+              }
             }
           } else {
             toast.error("Vui lòng điền đầy đủ thông tin kích thước");
@@ -262,7 +297,6 @@ const Manager: NextPage<{
       });
     };
   }, []);
-
   React.useLayoutEffect(() => {
     if (product) {
       setForm({
@@ -503,11 +537,13 @@ const Manager: NextPage<{
         </div>
         <div className="lg:col-span-7 col-span-10">
           <div className="flex">
-            <select onChange={({target}) => {
-              router.replace(`/manager?category=${target.value}`)
-            }} 
-            value={categoryQuery}
-            className="border px-4 py-2 outline-none">
+            <select
+              onChange={({ target }) => {
+                router.replace(`/manager?category=${target.value}`);
+              }}
+              value={categoryQuery}
+              className="border px-4 py-2 outline-none"
+            >
               <option value="bracelet">Vòng tay</option>
               <option value="material">Nguyên liệu</option>
             </select>
@@ -529,7 +565,7 @@ const Manager: NextPage<{
                     key={slug as string}
                     id={id as string}
                     slug={slug as string}
-                    files={files}
+                    files={files!}
                     name={name as string}
                     discount={discount!}
                     price={sizeList[0].price!}

@@ -42,36 +42,6 @@ const ProductsList: NextPage<{
   return (
     <Layout>
       <div className="my-10 lg:px-40 md:px-20 px-4 lg:py-20 py-10">
-        {/* <div className="flex">
-          <div className="flex space-x-2 flex-1">
-            <select
-              defaultValue=""
-              className="outline-none text-sm font-semibold shadow-md border flex space-x-2 items-center px-2 py-2 rounded-full"
-            >
-              <option value="" disabled hidden>
-                Màu sắc
-              </option>
-              <option value="all">Tất cả</option>
-              <option value="blue">Xanh</option>
-              <option value="red">Đỏ</option>
-              <option value="purple">Tím</option>
-              <option value="yellow">Vàng</option>
-              <option value="green">Lục</option>
-              <option value="cyan">Lam</option>
-            </select>
-            <select
-              defaultValue=""
-              className="outline-none text-sm font-semibold shadow-md border flex space-x-2 items-center px-2 py-2 rounded-full"
-            >
-              <option value="" disabled hidden>
-                Giá
-              </option>
-              <option value="price">Cao nhất</option>
-              <option value="color">Thấp nhất</option>
-            </select>
-          </div>
-        </div> */}
-
         {products.length > 0 ? (
           <div className="grid lg:grid-cols-6 md:grid-cols-3 grid-cols-2 lg:gap-6 gap-2 my-12">
             {products?.map(

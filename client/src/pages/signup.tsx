@@ -1,5 +1,5 @@
 import { GetServerSidePropsContext, NextPage } from "next";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import { toast } from "react-hot-toast";
 import { signIn } from "next-auth/react";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -12,13 +12,7 @@ import {
   AiOutlineEye,
   AiOutlineEyeInvisible,
 } from "react-icons/ai";
-import {
-  HiOutlineArrowNarrowLeft,
-  HiOutlineArrowNarrowRight,
-} from "react-icons/hi";
-import { ImPointDown } from "react-icons/im";
 import { createUser } from "@/lib/users";
-import Logo from "@/components/Logo";
 import Layout from "@/components/Layout";
 import Link from "next/link";
 import { isValidName, isValidPassword, isValidPhone } from "@/utils/constants";
@@ -123,9 +117,9 @@ const SignIn = () => {
   return (
     <Layout>
       <div className="h-screen bg-gray-50 overflow-hidden flex justify-center">
-        <div className="my-28 lg:w-[30vw] w-[95vw] flex justify-center bg-white shadow-md border">
-          <div className="mt-8 flex flex-col item-items-center w-full p-10">
-            <div className="flex justify-center items-center space-x-2 text-center w-full my-10">
+        <div className="lg:my-28 lg:w-[30vw] w-screen flex justify-center bg-white shadow-md border">
+          <div className="lg:mt-8 flex flex-col item-items-center w-full lg:p-10 p-4">
+            <div className="flex justify-center items-center space-x-2 text-center w-full mt-20 mb-10">
               <AiFillLock className="text-2xl text-green-400" />
               <h1 className="text-2xl font-semibold text-center">Đăng ký</h1>
             </div>

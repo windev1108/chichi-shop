@@ -68,6 +68,7 @@ const OrderModal = () => {
   } = state;
   const { cart } = orderModal;
 
+  console.log('cart',cart);
   useLayoutEffect(() => {
     getUserById({ id: session?.user?.id as string }).then(
       ({ user }: { user: User }) => {

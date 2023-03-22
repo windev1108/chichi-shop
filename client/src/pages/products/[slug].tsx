@@ -17,7 +17,7 @@ import currencyFormatter from "currency-formatter";
 import Image from "next/image";
 import { toast } from "react-hot-toast";
 import { useAppDispatch } from "@/redux/hook";
-import { updateCart } from "@/redux/features/isSlice";
+import { toggleBackdrop, updateCart } from "@/redux/features/isSlice";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../api/auth/[...nextauth]";
 import { useSession } from "next-auth/react";
@@ -29,8 +29,10 @@ import {
   formatCurrency,
   formatCurrencyWithDiscount,
   formatTextRendering,
+  sleep,
 } from "@/utils/constants";
 import { addProductToCart } from "@/lib/cart";
+import { setOrderModal } from "@/redux/features/orderSlice";
 
 export const getServerSideProps = async ({
   req,
@@ -118,6 +120,33 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
     }
   }, [content, point]);
 
+  const handleBuyNow = React.useCallback(async () => {
+    try {
+      if (amount > size?.amount!) {
+        toast.error("Số lượng vượt quá số lượng tồn kho");
+        return;
+      }
+      dispatch(toggleBackdrop());
+      sleep(() => {
+        dispatch(
+          setOrderModal({
+            isOpen: true,
+            cart: [
+              {
+                amount,
+                size,
+                product,
+                isChecked: true,
+              },
+            ],
+          })
+        );
+        dispatch(toggleBackdrop());
+      }, 1000);
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  }, [amount, size, product]);
   return (
     <Layout>
       <div className="lg:px-40 px-4">
@@ -204,9 +233,10 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
 
             {product?.descriptions && (
               <div className="flex flex-col">
-                <h1 className="font-semibold text-black lg:text-base text-sm">
-                  Mô tả
-                </h1>
+                <span className=" text-black lg:text-base text-sm">
+                  {`Mô tả sản phẩm :`}
+                  <h1 className="inline font-semibold text-sm">{product.name}</h1>
+                </span>
                 <p className="text-sm whitespace-pre-wrap">
                   {formatTextRendering({ text: product?.descriptions })}
                 </p>
@@ -248,7 +278,8 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
             </div>
             <div className="flex lg:space-x-4 space-x-2">
               <button
-                type="submit"
+                type="button"
+                onClick={handleBuyNow}
                 className="lg:px-4 py-2 bg-blue-500 text-white rounded-lg border hover:bg-opacity-70 hover:shadow-md w-1/2 text-center"
               >
                 Mua ngay
@@ -363,64 +394,66 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
           )}
 
           <div className="flex flex-col space-y-2 my-10">
-            {product?.reviews?.map(({ user, content, point, createdAt, id }) => (
-              <div
-                key={id}
-                className="relative flex space-x-4 items-center border px-4 py-2 rounded-lg"
-              >
-                <Image
-                  className="w-10 h-10 rounded-full object-cover"
-                  width={100}
-                  height={100}
-                  src={
-                    user?.image
-                      ? user.image.url
-                      : require("@/resources/images/noAvatar.webp")
-                  }
-                  alt=""
-                />
-                <div className="flex flex-col space-y-1 w-full">
-                  <div className="flex w-full justify-between">
-                    {point > 0 && (
-                      <div className="flex space-x-1 items-center text-gray-400 lg:text-base text-sm">
-                        {Array.from({ length: 5 }).map((_item, index) => (
-                          <React.Fragment key={index}>
-                            {point >= index + 1 ? (
-                              <AiFillStar
-                                onClick={() => {
-                                  if (point === index + 1) {
-                                    setState({ ...state, point: 0 });
-                                  } else {
-                                    setState({ ...state, point: index + 1 });
+            {product?.reviews?.map(
+              ({ user, content, point, createdAt, id }) => (
+                <div
+                  key={id}
+                  className="relative flex space-x-4 items-center border px-4 py-2 rounded-lg"
+                >
+                  <Image
+                    className="w-10 h-10 rounded-full object-cover"
+                    width={100}
+                    height={100}
+                    src={
+                      user?.image
+                        ? user.image.url
+                        : require("@/resources/images/noAvatar.webp")
+                    }
+                    alt=""
+                  />
+                  <div className="flex flex-col space-y-1 w-full">
+                    <div className="flex w-full justify-between">
+                      {point > 0 && (
+                        <div className="flex space-x-1 items-center text-gray-400 lg:text-base text-sm">
+                          {Array.from({ length: 5 }).map((_item, index) => (
+                            <React.Fragment key={index}>
+                              {point >= index + 1 ? (
+                                <AiFillStar
+                                  onClick={() => {
+                                    if (point === index + 1) {
+                                      setState({ ...state, point: 0 });
+                                    } else {
+                                      setState({ ...state, point: index + 1 });
+                                    }
+                                  }}
+                                  className="cursor-pointer text-yellow-500"
+                                />
+                              ) : (
+                                <AiOutlineStar
+                                  onClick={() =>
+                                    setState({ ...state, point: index + 1 })
                                   }
-                                }}
-                                className="cursor-pointer text-yellow-500"
-                              />
-                            ) : (
-                              <AiOutlineStar
-                                onClick={() =>
-                                  setState({ ...state, point: index + 1 })
-                                }
-                                className="cursor-pointer"
-                              />
-                            )}
-                          </React.Fragment>
-                        ))}
-                      </div>
-                    )}
-                    <span className="absolute top-2 right-2 lg:text-sm text-xs">
-                      {moment(new Date(createdAt!), "x").fromNow()}
-                    </span>
+                                  className="cursor-pointer"
+                                />
+                              )}
+                            </React.Fragment>
+                          ))}
+                        </div>
+                      )}
+                      <span className="absolute top-2 right-2 lg:text-sm text-xs">
+                        {moment(new Date(createdAt!), "x").fromNow()}
+                      </span>
+                    </div>
+                    <Link href={`/profile?id=${user?.id}`}>
+                      <h1 className="cursor-pointer font-bold text-sm hover:underline">
+                        {user?.name!}
+                      </h1>
+                    </Link>
+                    <h1 className="text-sm font-normal">{content}</h1>
                   </div>
-                  <Link href={`/profile?id=${user?.id}`}>
-                    <h1 className="cursor-pointer font-bold text-sm hover:underline">
-                      {user?.name!}
-                    </h1>
-                  </Link>
-                  <h1 className="text-sm font-normal">{content}</h1>
                 </div>
-              </div>
-            ))}
+              )
+            )}
           </div>
         </div>
       </div>

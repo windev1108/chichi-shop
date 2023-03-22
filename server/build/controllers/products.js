@@ -164,6 +164,9 @@ var getSellingAndNewProducts = function (_req, res) { return __awaiter(void 0, v
             case 0:
                 _a.trys.push([0, 3, , 4]);
                 return [4 /*yield*/, prisma.product.findMany({
+                        where: {
+                            category: "BRACELET"
+                        },
                         orderBy: {
                             sold: "desc"
                         },
@@ -187,6 +190,9 @@ var getSellingAndNewProducts = function (_req, res) { return __awaiter(void 0, v
             case 1:
                 selling = _a.sent();
                 return [4 /*yield*/, prisma.product.findMany({
+                        where: {
+                            category: "BRACELET"
+                        },
                         orderBy: {
                             createdAt: "desc"
                         }, take: 10,
@@ -297,9 +303,10 @@ var getProductsByKeyword = function (req, res) { return __awaiter(void 0, void 0
                 keyword = req.query.keyword;
                 return [4 /*yield*/, prisma.product.findMany({
                         where: {
-                            name: {
-                                contains: keyword
-                            }
+                            OR: [
+                                { name: { contains: keyword } },
+                                { descriptions: { contains: keyword } }
+                            ]
                         },
                         include: {
                             files: {

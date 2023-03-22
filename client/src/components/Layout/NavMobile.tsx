@@ -62,7 +62,14 @@ const NavMobile = () => {
             className="font-semibold px-6 py-2 hover:bg-gray-100"
             href="/products"
           >
-            <h1>Sản phẩm</h1>
+            <h1>Vòng tay</h1>
+          </Link>
+
+          <Link
+            className="font-semibold px-6 py-2 hover:bg-gray-100"
+            href="/materials"
+          >
+            <h1>Nguyên liệu</h1>
           </Link>
 
           <Link

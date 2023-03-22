@@ -41,7 +41,7 @@ const SearchProducts: NextPage<{
 }> = ({ products, keyword ,  page, totalPage }) => {
   return (
     <Layout>
-      <div className="my-10 lg:px-40 px-4 py-10 h-full">
+      <div className="mmy-10 lg:px-40 md:px-20 px-4 lg:py-20 py-10">
         <div className="flex my-10">
           <h1 className="text-lg">{`Kết quả tìm kiếm cho từ khóa "${keyword}"`}</h1>
           {/* <div className="flex space-x-2 flex-1">

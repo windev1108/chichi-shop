@@ -12,14 +12,7 @@ import {
   AiOutlineEye,
   AiOutlineEyeInvisible,
 } from "react-icons/ai";
-import {
-  HiOutlineArrowNarrowLeft,
-  HiOutlineArrowNarrowRight,
-} from "react-icons/hi";
-import { ImPointDown } from "react-icons/im";
-import { createUser } from "@/lib/users";
-import Logo from "@/components/Logo";
-import Layout from "@/components/Layout";
+  import Layout from "@/components/Layout";
 import Link from "next/link";
 
 export const getServerSideProps = async ({
@@ -119,8 +112,8 @@ const SignIn = () => {
   return (
     <Layout>
       <div className="h-screen bg-gray-50 overflow-hidden flex justify-center">
-        <div className="my-40 lg:w-[30vw] w-[95vw] flex justify-center bg-white shadow-md border">
-          <div className="mt-8 flex flex-col item-items-center w-full p-10">
+        <div className="lg:my-40 lg:w-[30vw] w-screen  flex justify-center bg-white shadow-md border">
+          <div className="mt-8 flex flex-col item-items-center w-full lg:p-10 p-4">
             <div className="flex justify-center items-center space-x-2 text-center w-full my-10">
               <AiFillLock className="text-2xl text-green-400" />
               <h1 className="text-2xl font-semibold text-center">Đăng nhập</h1>
@@ -208,7 +201,7 @@ const SignIn = () => {
               >
                 Đăng nhập
               </button>
-              <div className="flex justify-end py-10">
+              <div className="flex justify-end lg:py-10 py-0">
                 <div>
                   <div className="flex justify-center items-center space-x-1">
                     <div>

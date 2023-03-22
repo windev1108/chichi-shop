@@ -1,4 +1,3 @@
-import { StringDecoder } from "string_decoder"
 
 
 export interface Session {

@@ -97,6 +97,9 @@ export const getProductByPage = async (req: Request, res: Response): Promise<any
 export const getSellingAndNewProducts = async (_req: Request, res: Response): Promise<any> => {
     try {
         const selling = await prisma.product.findMany({
+            where: {
+                category: "BRACELET"
+            },
             orderBy: {
                 sold: "desc"
             },
@@ -118,6 +121,9 @@ export const getSellingAndNewProducts = async (_req: Request, res: Response): Pr
             },
         })
         const news = await prisma.product.findMany({
+            where: {
+                category: "BRACELET"
+            },
             orderBy: {
                 createdAt: "desc"
             }, take: 10,
@@ -213,9 +219,10 @@ export const getProductsByKeyword = async (req: Request, res: Response): Promise
         const { keyword } = req.query
         const products = await prisma.product.findMany({
             where: {
-                name: {
-                    contains: keyword as string
-                }
+                OR: [
+                    { name: { contains: keyword as string } },
+                    { descriptions: { contains: keyword as string } }
+                ]
             },
             include: {
                 files: {

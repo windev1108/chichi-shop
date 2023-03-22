@@ -73,7 +73,7 @@ const CartPage: NextPage = () => {
     isLoading: false,
     isUpdate: false,
   });
-  const { cart, cartRender, isLoading, isUpdate } = state;
+  const { cart, cartRender, isUpdate } = state;
 
   useEffect(() => {
     setState({ ...state, isLoading: false });

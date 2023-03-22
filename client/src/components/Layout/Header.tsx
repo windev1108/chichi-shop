@@ -121,7 +121,7 @@ const Header = () => {
                 className="relative after:absolute after:origin-center after:transition-all after:duration-300 after:ease-in-out hover:after:scale-x-100 after:scale-x-0 after:w-full after:top-[100%] after:border-b-[2px] after:border-black"
                 href="/materials"
               >
-                <p>Trang sức</p>
+                <p>Nguyên liệu</p>
               </Link>
             </div>
           </div>
@@ -161,7 +161,7 @@ const Header = () => {
                 <Link
                   href={`/products/${product.slug}`}
                   key={product.id as string}
-                  className="flex h-[4.5rem] items-center space-x-2 hover:bg-gray-100 cursor-pointer border"
+                  className="flex h-[5rem] items-center space-x-2 hover:bg-gray-100 cursor-pointer border"
                 >
                   <Image
                     className="lg:block hidden object-cover w-fit h-full"
@@ -304,8 +304,12 @@ const Header = () => {
                 <div className="group-hover:block hidden absolute top-[100%] right-0 after:absolute after:top-[-5%] after:right-0 after:left-0 after:h-4 after:bg-transparent ">
                   <div className="w-[28rem] border flex flex-col bg-white shadow-md max-h-[20rem] overflow-y-scroll scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-400">
                     <div className="flex justify-between px-4 items-center py-1 border-b-2">
-                      <Link href="/cart">
-                        <h1 className="cursor-pointer text-sm">Xem Giỏ hàng</h1>
+                    <Link
+                        href="/cart"
+                        className="flex space-x-2 items-center cursor-pointer"
+                      >
+                        <AiOutlineShoppingCart className="text-blue-400 text-xl" />
+                        <h1 className="text-sm">Giỏ hàng</h1>
                       </Link>
                       <button
                         onClick={handleClearCart}

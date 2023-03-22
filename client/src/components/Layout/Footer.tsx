@@ -27,11 +27,11 @@ const Footer = () => {
         <h1 className="text-sm   xl font-bold text-black mb-2">Địa chỉ</h1>
         <h2 className="text-sm">Phường 11, Bình Thạnh, TP.Hồ Chí Minh</h2>
       </div>
-      <div>
+      <div className="lg:col-span-1 col-span-2">
         <h1 className="text-sm  xl font-bold text-black mb-2">
           Theo dõi chúng tôi
         </h1>
-        <div className="flex flex-col space-y-4 w-full">
+        <div className="flex lg:flex-col flex-row space-x-6 lg:space-x-0 lg:space-y-4 w-full items-center lg:items-start lg:justify-start justify-around">
           <Link
             target="_blank"
             href="https://www.facebook.com/chichihandmade.art"

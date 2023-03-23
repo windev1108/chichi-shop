@@ -17,9 +17,9 @@ import { TransportMethod, User } from "@/utils/types";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import React, { useLayoutEffect, useState } from "react";
+import React, { useEffect,  useState } from "react";
 import { toast } from "react-hot-toast";
-import { AiFillCopy, AiOutlinePlus } from "react-icons/ai";
+import {  AiOutlinePlus } from "react-icons/ai";
 import { FaEdit } from "react-icons/fa";
 import { HiOutlineTruck } from "react-icons/hi";
 import { ImLocation } from "react-icons/im";
@@ -70,7 +70,7 @@ const OrderModal = () => {
   } = state;
   const { cart } = orderModal;
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     getUserById({ id: session?.user?.id as string }).then(
       ({ user }: { user: User }) => {
         if (user.address) {
@@ -114,11 +114,11 @@ const OrderModal = () => {
     );
   }, []);
 
-  useLayoutEffect(() => {
-    setState({ ...state, randomCode: Math.floor(Math.random() * 1000000) });
-  }, [methodPayment]);
+  // useEffect(() => {
+  //   setState({ ...state, randomCode: Math.floor(Math.random() * 1000000) });
+  // }, [methodPayment]);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (user && methodTransportId) {
       calculateFee({
         amount: orderModal.cart.reduce(
@@ -255,8 +255,8 @@ const OrderModal = () => {
             <div className="grid grid-cols-10 w-full font-semibold text-black text-sm bg-gray-100 py-3">
               <h1 className="col-span-2 text-center">Hình ảnh sản phẩm</h1>
               <h1 className="col-span-3 text-left">Tên sản phẩm</h1>
-              <h1 className="col-span-2 text-left">Kích thước</h1>
-              <h1 className="col-span-1 text-left">Số lượng</h1>
+              <h1 className="col-span-2 text-center">Kích thước</h1>
+              <h1 className="col-span-1 text-center">Số lượng</h1>
               <h1 className="col-span-2 text-center">Đơn giá</h1>
             </div>
             <div className="flex flex-col space-y-2">
@@ -277,8 +277,8 @@ const OrderModal = () => {
                   <h1 className="col-span-3 text-left">
                     {item?.product?.name!}
                   </h1>
-                  <h1 className="col-span-2 text-left">{item?.size?.name}</h1>
-                  <h1 className="col-span-1 text-left">{item?.amount!}</h1>
+                  <h1 className="col-span-2 text-center">{item?.size?.name}</h1>
+                  <h1 className="col-span-1 text-center">{item?.amount!}</h1>
                   <h1 className="col-span-2 text-center">
                     {item?.size?.price!}
                   </h1>

@@ -533,10 +533,10 @@ const OrderDetail: NextPage<{ order: Order; user: User }> = ({
                 {user?.isAdmin && (
                   <>
                     {order?.status?.length === 1 && (
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-2 items-center">
                         <button
                           onClick={handleAcceptOrder}
-                          className="px-4 py-2 bg-green-700 flex items-center space-x-2 text-white text-center rounded-lg hover:bg-opacity-70"
+                          className="px-4 py-2 h-10 bg-green-700 flex items-center space-x-2 text-white text-center rounded-lg hover:bg-opacity-70"
                         >
                           {isLoadingAccept && (
                             <AiOutlineLoading3Quarters className="animate-spin text-white duration-500 ease-linear" />
@@ -546,7 +546,7 @@ const OrderDetail: NextPage<{ order: Order; user: User }> = ({
 
                         <button
                           onClick={handleRejectOrder}
-                          className="px-4 py-2 bg-red-700 flex items-center space-x-2 text-white text-center rounded-lg hover:bg-opacity-70"
+                          className="px-4 py-2 h-10 bg-red-700 flex items-center space-x-2 text-white text-center rounded-lg hover:bg-opacity-70"
                         >
                           {isLoadingReject && (
                             <AiOutlineLoading3Quarters className="animate-spin text-white duration-500 ease-linear" />
@@ -560,7 +560,7 @@ const OrderDetail: NextPage<{ order: Order; user: User }> = ({
                       order?.status[order.status?.length - 1].step === 2 && (
                         <button
                           onClick={handleThirdStatus}
-                          className="px-4 py-2 bg-green-700 flex items-center space-x-2 text-white text-center rounded-lg hover:bg-opacity-70"
+                          className="px-4 py-2 h-10 bg-green-700 flex items-center space-x-2 text-white text-center rounded-lg hover:bg-opacity-70"
                         >
                           {isLoadingAccept && (
                             <AiOutlineLoading3Quarters className="animate-spin text-white duration-500 ease-linear" />
@@ -571,7 +571,7 @@ const OrderDetail: NextPage<{ order: Order; user: User }> = ({
 
                     {order.status &&
                       order.status[order.status?.length - 1].step === 3 && (
-                        <div className="relative flex space-x-2">
+                        <div className="relative flex space-x-2 items-center">
                           <button
                             onClick={() => {
                               isOpenShipping! && shippingCode! && shippingUnit!
@@ -585,7 +585,7 @@ const OrderDetail: NextPage<{ order: Order; user: User }> = ({
                               isOpenShipping && !shippingCode && !shippingUnit
                                 ? "cursor-not-allowed bg-opacity-50"
                                 : "cursor-pointer"
-                            } px-4 py-2 bg-green-700 flex items-center space-x-2 text-white text-center rounded-lg hover:bg-opacity-70`}
+                            } px-4 py-2 h-10 bg-green-700 flex items-center space-x-2 text-white text-center rounded-lg hover:bg-opacity-70`}
                           >
                             {isLoadingAccept && (
                               <AiOutlineLoading3Quarters className="animate-spin text-white duration-500 ease-linear" />
@@ -628,7 +628,7 @@ const OrderDetail: NextPage<{ order: Order; user: User }> = ({
                         <div className="relative flex space-x-2">
                           <button
                             onClick={handleTakeGoodSuccess}
-                            className="px-4 py-2 bg-green-700 flex items-center space-x-2 text-white text-center rounded-lg hover:bg-opacity-70"
+                            className="px-4 py-2 h-10 bg-green-700 flex items-center space-x-2 text-white text-center rounded-lg hover:bg-opacity-70"
                           >
                             {isLoadingAccept && (
                               <AiOutlineLoading3Quarters className="animate-spin text-white duration-500 ease-linear" />

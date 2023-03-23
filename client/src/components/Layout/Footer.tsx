@@ -28,20 +28,10 @@ const Footer = () => {
         <h2 className="text-sm">Phường 11, Bình Thạnh, TP.Hồ Chí Minh</h2>
       </div>
       <div className="lg:col-span-1 col-span-2">
-        <h1 className="text-sm  xl font-bold text-black mb-2">
-          Theo dõi chúng tôi
+        <h1 className="text-sm  xl font-bold text-black mb-6">
+          Kênh người bán của chúng tôi
         </h1>
         <div className="flex lg:flex-col flex-row space-x-6 lg:space-x-0 lg:space-y-4 w-full items-center lg:items-start lg:justify-start justify-around">
-          <Link
-            target="_blank"
-            href="https://www.facebook.com/chichihandmade.art"
-          >
-            <img
-              className="w-6 h-6 object-cover"
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Facebook_Logo_%282019%29.png/768px-Facebook_Logo_%282019%29.png"
-              alt=""
-            />
-          </Link>
 
           <Link
             target="_blank"
@@ -65,6 +55,19 @@ const Footer = () => {
               height={100}
               className="w-24 h-fit object-cover"
               src={require("@/resources/images/Shopee.svg.webp")}
+              alt=""
+            />
+          </Link>
+
+          <Link
+            target="_blank"
+            href="https://www.tiktok.com/@chichi.handmade?_t=8atDWG1X0Ur&_r=1"
+          >
+            <Image
+              width={100}
+              height={100}
+              className="w-24 h-fit object-cover"
+              src={require("@/resources/images/tiktok.png")}
               alt=""
             />
           </Link>

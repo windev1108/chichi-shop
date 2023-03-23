@@ -29,6 +29,7 @@ import { useRouter } from "next/router";
 import { BsBox } from "react-icons/bs";
 import { GrFormNext, GrFormPrevious } from "react-icons/gr";
 import {
+  AiFillCopy,
   AiOutlineFileDone,
   AiOutlineLoading3Quarters,
   AiOutlineMessage,
@@ -105,7 +106,6 @@ const OrderDetail: NextPage<{ order: Order; user: User }> = ({
     shippingCode,
     isOpenShipping,
   } = state;
-
 
   const handleAcceptOrder = React.useCallback(async () => {
     try {
@@ -487,11 +487,13 @@ const OrderDetail: NextPage<{ order: Order; user: User }> = ({
                     <h1 className="text-sm text-gray-600">{order.id}</h1>
                   </div>
                   <div className="flex space-x-2">
-                      <h1 className="text-sm">Phương thức thanh toán : </h1>
-                      <h1 className="text-sm text-gray-600">
-                        {order.methodPayment === 1 ? "Thanh toán khi nhận hàng" : "Thanh toán momo"}
-                      </h1>
-                    </div>
+                    <h1 className="text-sm">Phương thức thanh toán : </h1>
+                    <h1 className="text-sm text-gray-600">
+                      {order.methodPayment === 1
+                        ? "Thanh toán khi nhận hàng"
+                        : "Thanh toán momo"}
+                    </h1>
+                  </div>
                   <div className="flex space-x-2">
                     <h1 className="text-sm">Thời gian đặt hàng : </h1>
                     <h1 className="text-sm text-gray-600">
@@ -509,10 +511,23 @@ const OrderDetail: NextPage<{ order: Order; user: User }> = ({
                     </div>
                     <div className="flex space-x-2">
                       <h1 className="text-sm">Mã vận đơn : </h1>
-                      <h1 className="text-sm text-gray-600">
-                        {order.shippingCode}
-                      </h1>
-                    </div>          
+                      <div
+                        className="flex space-x-2 items-center"
+                      >
+                        <h1 className="text-sm text-gray-600">
+                          {order.shippingCode}
+                        </h1>
+                        <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(shippingCode!);
+                          toast.success("Sao chép thành công");
+                        }}
+                        className="p-1 hover:bg-gray-100 rounded-full"
+                      >
+                        <AiFillCopy className="cursor-pointer text-yellow-500 text-lg" />
+                      </button>
+                      </div>
+                    </div>
                   </div>
                 )}
                 {user?.isAdmin && (
@@ -662,7 +677,7 @@ const OrderDetail: NextPage<{ order: Order; user: User }> = ({
               <div className="border-b"></div>
 
               <div className="w-full space-y-2 h-[80%] overflow-y-scroll scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-300">
-                {order?.products?.map(({ amount, size, product, id}) => (
+                {order?.products?.map(({ amount, size, product, id }) => (
                   <div key={id} className="flex space-x-2">
                     <Image
                       src={product?.files[0].url!}
@@ -735,7 +750,7 @@ const OrderDetail: NextPage<{ order: Order; user: User }> = ({
                   </div>
                   <div className="flex items-center space-x-2">
                     <h1 className="text-sm text-gray-400">Tên người nhận:</h1>
-                    <span className="text-sm text-black">{`${order?.user?.name}`}</span>
+                    <Link href={`/profile?id=${order.user?.id!}`} className="text-sm text-black hover:underline hover:text-blue-500">{`${order?.user?.name}`}</Link>
                   </div>
                 </div>
                 <div className="flex flex-col">

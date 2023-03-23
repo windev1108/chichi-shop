@@ -345,7 +345,7 @@ const OrderModal = () => {
               </option> */}
             </select>
 
-            {methodPayment === 2 && (
+            {/* {methodPayment === 2 && (
               <div className="flex space-x-4">
                 <Image
                   src={require("@/resources/images/momoqr.jpg")}
@@ -386,7 +386,7 @@ const OrderModal = () => {
                   </div>
                 </div>
               </div>
-            )}
+            )} */}
 
             <div className="flex space-x-2">
               <HiOutlineTruck className="text-gray-500 text-xl" />

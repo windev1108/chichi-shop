@@ -63,7 +63,7 @@ const SignIn = () => {
     e.preventDefault();
     try {
       if (!isValidName(name)) {
-        toast.error("Họ tên phải lớn hơn 2 kí tự");
+        toast.error("Họ tên phải từ 2 kí tự đến 30 kí tự");
         return;
       }
 
@@ -133,7 +133,7 @@ const SignIn = () => {
                     required
                     name="name"
                     id="name"
-                    placeholder="Nhập họ tên  của bạn"
+                    placeholder="Nhập họ tên của bạn"
                     className={`bg-gray-50 w-full px-4 py-2 outline-none border`}
                     autoComplete="new-password"
                   />

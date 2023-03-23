@@ -115,7 +115,7 @@ export const sleep = (cb: any, ms = 3000) => {
 
 
 export const isValidName = (name: string) => {
-    if (name.length < 2 || name.length > 12) {
+    if (name.length < 2 || name.length > 30) {
         return false;
     }
     return true;

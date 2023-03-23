@@ -105,6 +105,7 @@ export const getOrderById = async (req: Request, res: Response) => {
                     select: {
                         name: true,
                         id: true,
+                        address: true,
                         image: {
                             select: {
                                 url: true
@@ -135,7 +136,7 @@ export const createOrder = async (req: Request, res: Response) => {
         })
         if (foundOrder) {
             const id = randomNumberId()
-            await prisma.order.create({
+            const order = await prisma.order.create({
                 data: {
                     id,
                     totalPayment,
@@ -152,11 +153,14 @@ export const createOrder = async (req: Request, res: Response) => {
                             data: products
                         }
                     }
+                },
+                select: {
+                    id: true
                 }
             })
-            res.status(200).json({ message: "Đơn hàng đã tạo thành công", success: true })
+            res.status(200).json({ message: "Đơn hàng đã tạo thành công", order, success: true })
         } else {
-            await prisma.order.create({
+            const order = await prisma.order.create({
                 data: {
                     id,
                     totalPayment,
@@ -173,9 +177,12 @@ export const createOrder = async (req: Request, res: Response) => {
                             data: products
                         }
                     }
+                },
+                select: {
+                    id: true
                 }
             })
-            res.status(200).json({ message: "Đơn hàng đã tạo thành công", success: true })
+            res.status(200).json({ message: "Đơn hàng đã tạo thành công", order, success: true })
         }
 
 
@@ -308,6 +315,41 @@ export const createFiveStatus = async (req: Request, res: Response) => {
                 orderId: +orderId!
             }
         })
+
+        const order = await prisma.order.findUnique({
+            where: {
+                id: +orderId
+            },
+            select: {
+                products: {
+                    select: {
+                        product: {
+                            select: {
+                                sold: true,
+                                id: true
+                            }
+                        },
+                        amount: true
+                    }
+                }
+            }
+
+        })
+
+
+        // Update sold amount
+        if (order) {
+            order.products.map(async ({ amount, product }) => {
+                await prisma.product.update({
+                    where: {
+                        id: product.id!
+                    },
+                    data: {
+                        sold: product?.sold! + amount!,
+                    }
+                })
+            })
+        }
 
         res.status(200).json({ message: "Cập nhật trạng thái thành công", success: true })
     } catch (error: any) {

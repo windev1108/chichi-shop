@@ -26,6 +26,7 @@ import { formatCurrency } from "@/utils/constants";
 import { MdDeliveryDining, MdOutlineCancel } from "react-icons/md";
 import { BsBox } from "react-icons/bs";
 import { HiInboxIn } from "react-icons/hi";
+import moment from "moment";
 
 const Header = () => {
   const { data: session, status } = useSession();
@@ -244,8 +245,11 @@ const Header = () => {
                           <Link
                             href={`/orders/${item.id}`}
                             key={item.id as number}
-                            className="flex justify-start text-sm items-center  hover:bg-gray-100 cursor-pointer p-2 h-24 border-b"
+                            className="relative flex justify-start text-sm items-center  hover:bg-gray-100 cursor-pointer p-2 h-24 border-b"
                           >
+                            <div className="absolute top-0 right-3">
+                                <h1>{moment(item.createdAt).format("HH:mm DD/MM/yyyy")}</h1>
+                            </div>
                             <div className="flex flex-col">
                               <div className="flex w-full space-x-2 whitespace-nowrap">
                                 <h2>Mã đơn hàng :</h2>

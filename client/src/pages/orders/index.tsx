@@ -18,6 +18,7 @@ import { BsBox } from "react-icons/bs";
 import { MdDeliveryDining, MdOutlineCancel } from "react-icons/md";
 import { RiLoader4Fill } from "react-icons/ri";
 import { AiOutlineFileDone } from "react-icons/ai";
+import { useSession } from "next-auth/react";
 
 export const getServerSideProps = async ({
   req,
@@ -48,6 +49,7 @@ export const getServerSideProps = async ({
 };
 
 const Orders: NextPage<{ user: User }> = ({ user }) => {
+  const { data : session } = useSession()
   const router = useRouter();
   const { isUpdateRealtime } = useAppSelector((state) => state.isSlice);
 
@@ -58,8 +60,12 @@ const Orders: NextPage<{ user: User }> = ({ user }) => {
 
   return (
     <Layout>
-      <div className="grid grid-cols-9 m-40 gap-2 h-screen">
+      <div className="grid grid-cols-9 m-40 gap-2 h-auto">
+        {session?.user.id === user?.id ?
         <Navigation user={user} />
+        :
+        <div className="col-span-2"></div>
+      }
         <div className="col-span-7 space-y-4">
           <div className="flex justify-around shadow-md h-12 items-center">
             <h1>Tất cả</h1>
@@ -148,7 +154,7 @@ const Orders: NextPage<{ user: User }> = ({ user }) => {
                                 {product?.discount! > 0 &&
                                   formatCurrency({
                                     price:
-                                      (size?.price! / 100) * product?.discount!,
+                                    size?.price!
                                   })}
                               </span>
                               <h1 className="text-sm font-bold text-red-500">

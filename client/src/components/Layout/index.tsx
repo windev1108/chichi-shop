@@ -10,6 +10,7 @@ import OrderModal from "@/components/Modal/OrderModal";
 import Backdrop from "@/components/Modal/Backdrop";
 import { Socket, io } from "socket.io-client";
 import { toggleUpdateRealtime } from "@/redux/features/isSlice";
+import { useRouter } from "next/router";
 const socket: Socket = io(process.env.NEXT_PUBLIC_BASE_URL as string);
 
 const Layout: NextPage<{
@@ -17,6 +18,7 @@ const Layout: NextPage<{
   title?: string;
 }> = ({ children, title }) => {
   const dispatch = useAppDispatch();
+  const router = useRouter()
   const { orderModal } = useAppSelector((state) => state.orderSlice);
   const { isOpenBackdrop } = useAppSelector((state) => state.isSlice);
   useEffect(() => {
@@ -28,6 +30,7 @@ const Layout: NextPage<{
       console.log("Socket initialization");
       socket.on("updateOrder", () => {
         dispatch(toggleUpdateRealtime())
+        router.replace(router.asPath);
       });
     });
   }, []);

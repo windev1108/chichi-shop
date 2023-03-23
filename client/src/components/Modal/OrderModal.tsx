@@ -1,7 +1,10 @@
+import { sendEmail } from "@/lib/email";
 import { calculateFee, getServicePackage } from "@/lib/ghn";
 import { createOrder } from "@/lib/orders";
 import { getUserById } from "@/lib/users";
-import { toggleBackdrop, toggleUpdateRealtime, updateCart } from "@/redux/features/isSlice";
+import {
+  toggleBackdrop,
+} from "@/redux/features/isSlice";
 import { setOrderModal } from "@/redux/features/orderSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import {
@@ -13,17 +16,16 @@ import {
 import { TransportMethod, User } from "@/utils/types";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useLayoutEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-import { AiFillCopy,  AiOutlinePlus } from "react-icons/ai";
+import { AiFillCopy, AiOutlinePlus } from "react-icons/ai";
 import { FaEdit } from "react-icons/fa";
 import { HiOutlineTruck } from "react-icons/hi";
 import { ImLocation } from "react-icons/im";
 import { IoMdClose } from "react-icons/io";
 import { MdPayment, MdPayments } from "react-icons/md";
-import { io , Socket } from "socket.io-client";
+import { io, Socket } from "socket.io-client";
 const socket: Socket = io(process.env.NEXT_PUBLIC_BASE_URL as string);
 
 const OrderModal = () => {
@@ -68,7 +70,6 @@ const OrderModal = () => {
   } = state;
   const { cart } = orderModal;
 
-  console.log('cart',cart);
   useLayoutEffect(() => {
     getUserById({ id: session?.user?.id as string }).then(
       ({ user }: { user: User }) => {
@@ -177,7 +178,7 @@ const OrderModal = () => {
 
       dispatch(toggleBackdrop());
       sleep(async () => {
-        const { success } = await createOrder({
+        const { success, order } = await createOrder({
           order: {
             userId: user?.id!,
             methodPayment,
@@ -192,16 +193,26 @@ const OrderModal = () => {
             }),
           },
         });
-        dispatch(toggleBackdrop());
         if (success) {
           toast.success("Đơn hàng đã tạo thành công");
+          dispatch(toggleBackdrop());
           dispatch(
             setOrderModal({
               isOpen: false,
               cart: [],
             })
           );
-          socket.emit("updateOrder")
+         await sendEmail({
+            fromEmail: session?.user?.email as string,
+            fromName: session?.user?.name as string,
+            orderUrl: `${
+              process.env.NEXT_PUBLIC_VERCEL_URL ||
+              process.env.NEXT_PUBLIC_HOST ||
+              "http://localhost:3000"
+            }/orders/${order.id}`,
+          });
+          router.replace(router.asPath)
+          socket.emit("updateOrder");
         } else {
           toast.error("Đơn hàng đã tạo thất bại");
         }
@@ -250,7 +261,10 @@ const OrderModal = () => {
             </div>
             <div className="flex flex-col space-y-2">
               {cart?.map((item) => (
-                <div className="grid grid-cols-10 border-b items-center text-center text-sm text-black h-36">
+                <div
+                  key={item.product?.id!}
+                  className="grid grid-cols-10 border-b items-center text-center text-sm text-black h-36"
+                >
                   <div className="col-span-2 text-center">
                     <Image
                       src={item.product?.files[0].url!}
@@ -326,9 +340,9 @@ const OrderModal = () => {
               <option className="px-4 py-2" value="1">
                 Thanh toán khi nhận hàng
               </option>
-              <option className="px-4 py-2" value="2">
+              {/* <option className="px-4 py-2" value="2">
                 Thanh toán momo
-              </option>
+              </option> */}
             </select>
 
             {methodPayment === 2 && (

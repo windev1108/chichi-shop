@@ -90,7 +90,10 @@ export interface Order {
     userId?: string
     methodPayment?: number
     transportFee?: number
+    moneyTransferContent?: string
     totalPayment?: number
+    shippingUnit?: string
+    shippingCode?: string
     products?: ProductOrder[]
     status?: Status[]
     message?: string

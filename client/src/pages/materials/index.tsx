@@ -37,8 +37,6 @@ const Mat: NextPage<{
   totalPage: number;
   page: number;
 }> = ({ products, totalPage, page }) => {
-  console.log("totalPage,", totalPage);
-  console.log("page,", page);
 
   return (
     <Layout>

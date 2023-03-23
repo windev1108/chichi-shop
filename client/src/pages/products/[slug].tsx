@@ -122,6 +122,10 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
 
   const handleBuyNow = React.useCallback(async () => {
     try {
+      if(amount <= 0){
+        toast.error("Vui lòng nhập số lượng sản phẩm");
+        return;
+      }
       if (amount > size?.amount!) {
         toast.error("Số lượng vượt quá số lượng tồn kho");
         return;
@@ -223,7 +227,7 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
                     className={`${
                       item!.id! === size?.id! ? "border-orange-400" : "border"
                     } border-2 px-3 py-1 text-black font-semibold text-sm`}
-                    key={item.id as string}
+                    key={item.id! as string}
                   >
                     {item.name}
                   </button>
@@ -242,8 +246,13 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
                 </p>
               </div>
             )}
-
-            <div className="flex lg:space-x-6 space-x-2 items-center lg:py-10 py-6">
+            {product?.sold &&
+              <div className="flex lg:space-x-4 space-x-2">
+                  <h1>Đã bán :</h1>
+                  <h1>{product?.sold!}</h1>
+              </div>
+            }
+            <div className="flex items-center lg:py-10 py-2">
               <div className="h-10 flex flex-1">
                 <button
                   type="button"

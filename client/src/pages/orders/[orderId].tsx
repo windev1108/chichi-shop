@@ -20,12 +20,7 @@ import Image from "next/image";
 import React, { useEffect } from "react";
 import { FaRegMoneyBillAlt } from "react-icons/fa";
 import { FcDown } from "react-icons/fc";
-import {
-  MdCancel,
-  MdOutlineCancel,
-  MdOutlineDeliveryDining,
-  MdPayments,
-} from "react-icons/md";
+import { MdCancel, MdPayments } from "react-icons/md";
 import { authOptions } from "../api/auth/[...nextauth]";
 import Link from "next/link";
 import { HiInboxIn, HiOutlineTruck } from "react-icons/hi";
@@ -83,23 +78,34 @@ const OrderDetail: NextPage<{ order: Order; user: User }> = ({
   user,
 }) => {
   const router = useRouter();
-  const { isUpdateRealtime } = useAppSelector((state) => state.isSlice);
 
-  useEffect(() => {
-    router.replace(router.asPath);
-  }, [isUpdateRealtime]);
   const [state, setState] = React.useState<{
     messageOrder: string;
     isOpenMessage: boolean;
+    shippingUnit?: string;
+    shippingCode?: string;
     isLoadingAccept: boolean;
-    isLoadingReject: boolean
+    isLoadingReject: boolean;
+    isOpenShipping: boolean;
   }>({
     messageOrder: "",
+    shippingUnit: "",
+    shippingCode: "",
     isOpenMessage: false,
     isLoadingAccept: false,
-    isLoadingReject: false
+    isLoadingReject: false,
+    isOpenShipping: false,
   });
-  const { messageOrder, isOpenMessage, isLoadingAccept , isLoadingReject } = state;
+  const {
+    messageOrder,
+    isOpenMessage,
+    isLoadingAccept,
+    isLoadingReject,
+    shippingUnit,
+    shippingCode,
+    isOpenShipping,
+  } = state;
+
 
   const handleAcceptOrder = React.useCallback(async () => {
     try {
@@ -163,13 +169,37 @@ const OrderDetail: NextPage<{ order: Order; user: User }> = ({
 
   const handleFourStatus = React.useCallback(async () => {
     try {
+      if (!shippingUnit) {
+        toast.error("Vui lòng nhập tên đơn vị vận chuyển");
+        return;
+      }
+
+      if (!shippingCode) {
+        toast.error("Vui lòng nhập mã vận đơn");
+        return;
+      }
+
       setState({ ...state, isLoadingAccept: true });
-      const { success, message } = await createFourStatus({
+      await createFourStatus({
         orderId: order.id!,
       });
 
+      const { success, message } = await updateOrder({
+        orderId: order.id!,
+        order: {
+          shippingCode,
+          shippingUnit,
+        },
+      });
+
       if (success) {
-        setState({ ...state, isLoadingAccept: false });
+        setState({
+          ...state,
+          isLoadingAccept: false,
+          shippingCode: "",
+          shippingUnit: "",
+          isOpenShipping: false,
+        });
         toast.success(message);
         router.replace(router.asPath);
         socket.emit("updateOrder");
@@ -179,7 +209,7 @@ const OrderDetail: NextPage<{ order: Order; user: User }> = ({
     } catch (error: any) {
       toast.error(error.message);
     }
-  }, []);
+  }, [shippingCode, shippingUnit]);
 
   const handleTakeGoodSuccess = React.useCallback(async () => {
     try {
@@ -229,6 +259,7 @@ const OrderDetail: NextPage<{ order: Order; user: User }> = ({
       toast.error(error.message);
     }
   }, [messageOrder]);
+
   return (
     <Layout>
       <div className="grid grid-cols-9 m-40 gap-2">
@@ -456,12 +487,34 @@ const OrderDetail: NextPage<{ order: Order; user: User }> = ({
                     <h1 className="text-sm text-gray-600">{order.id}</h1>
                   </div>
                   <div className="flex space-x-2">
+                      <h1 className="text-sm">Phương thức thanh toán : </h1>
+                      <h1 className="text-sm text-gray-600">
+                        {order.methodPayment === 1 ? "Thanh toán khi nhận hàng" : "Thanh toán momo"}
+                      </h1>
+                    </div>
+                  <div className="flex space-x-2">
                     <h1 className="text-sm">Thời gian đặt hàng : </h1>
                     <h1 className="text-sm text-gray-600">
                       {moment(order?.createdAt!).format("h:mm A DD/MM/yyyy")}
                     </h1>
                   </div>
                 </div>
+                {order.shippingUnit && order.shippingCode && (
+                  <div className="flex flex-col">
+                    <div className="flex space-x-2">
+                      <h1 className="text-sm">Đơn vị vận chuyển : </h1>
+                      <h1 className="text-sm text-gray-600">
+                        {order.shippingUnit}
+                      </h1>
+                    </div>
+                    <div className="flex space-x-2">
+                      <h1 className="text-sm">Mã vận đơn : </h1>
+                      <h1 className="text-sm text-gray-600">
+                        {order.shippingCode}
+                      </h1>
+                    </div>          
+                  </div>
+                )}
                 {user?.isAdmin && (
                   <>
                     {order?.status?.length === 1 && (
@@ -503,21 +556,58 @@ const OrderDetail: NextPage<{ order: Order; user: User }> = ({
 
                     {order.status &&
                       order.status[order.status?.length - 1].step === 3 && (
-                        <button
-                          onClick={handleFourStatus}
-                          className="px-4 py-2 bg-green-700 flex items-center space-x-2 text-white text-center rounded-lg hover:bg-opacity-70"
-                        >
-                          {isLoadingAccept && (
-                            <AiOutlineLoading3Quarters className="animate-spin text-white duration-500 ease-linear" />
+                        <div className="relative flex space-x-2">
+                          <button
+                            onClick={() => {
+                              isOpenShipping! && shippingCode! && shippingUnit!
+                                ? handleFourStatus()
+                                : setState({ ...state, isOpenShipping: true });
+                            }}
+                            disabled={
+                              isOpenShipping && !shippingCode && !shippingUnit
+                            }
+                            className={`${
+                              isOpenShipping && !shippingCode && !shippingUnit
+                                ? "cursor-not-allowed bg-opacity-50"
+                                : "cursor-pointer"
+                            } px-4 py-2 bg-green-700 flex items-center space-x-2 text-white text-center rounded-lg hover:bg-opacity-70`}
+                          >
+                            {isLoadingAccept && (
+                              <AiOutlineLoading3Quarters className="animate-spin text-white duration-500 ease-linear" />
+                            )}
+                            <h1>Đã giao cho DVVC</h1>
+                          </button>
+                          {isOpenShipping && (
+                            <div className="absolute top-[150%] right-[120%] w-8 space-y-2">
+                              <input
+                                value={shippingUnit}
+                                onChange={({ target }) =>
+                                  setState({
+                                    ...state,
+                                    shippingUnit: target.value,
+                                  })
+                                }
+                                className="outline-none border px-4 py-2"
+                                type="text"
+                                placeholder="Nhập tên DVVC"
+                              />
+                              <input
+                                value={shippingCode}
+                                className="outline-none border px-4 py-2"
+                                onChange={({ target }) =>
+                                  setState({
+                                    ...state,
+                                    shippingCode: target.value,
+                                  })
+                                }
+                                type="text"
+                                placeholder="Nhập mã vận đơn"
+                              />
+                            </div>
                           )}
-                          <h1>Đã giao cho DVVC</h1>
-                        </button>
+                        </div>
                       )}
-                  </>
-                )}
 
-                {user?.id === order.user?.id && (
-                  <>
                     {order.status &&
                       order.status[order?.status?.length - 1].step === 4 && (
                         <div className="relative flex space-x-2">
@@ -528,8 +618,9 @@ const OrderDetail: NextPage<{ order: Order; user: User }> = ({
                             {isLoadingAccept && (
                               <AiOutlineLoading3Quarters className="animate-spin text-white duration-500 ease-linear" />
                             )}
-                            <h1>Tôi đã nhận được hàng</h1>
+                            <h1>Giao hàng thành công</h1>
                           </button>
+
                           <button
                             onClick={() => {
                               isOpenMessage && messageOrder
@@ -571,7 +662,7 @@ const OrderDetail: NextPage<{ order: Order; user: User }> = ({
               <div className="border-b"></div>
 
               <div className="w-full space-y-2 h-[80%] overflow-y-scroll scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-300">
-                {order?.products?.map(({ amount, size, product, id }) => (
+                {order?.products?.map(({ amount, size, product, id}) => (
                   <div key={id} className="flex space-x-2">
                     <Image
                       src={product?.files[0].url!}
@@ -586,7 +677,7 @@ const OrderDetail: NextPage<{ order: Order; user: User }> = ({
                           {"Tên sản phẩm :"}
                         </h1>
                         <Link
-                          href={`/products/${id}`}
+                          href={`/products/${product?.slug}`}
                           className="text-black text-sm hover hover:text-blue-600"
                         >
                           {product?.name}
@@ -603,8 +694,7 @@ const OrderDetail: NextPage<{ order: Order; user: User }> = ({
                           <span className="text-gray-500 line-through lg:text-xs text-[13px] text-center whitespace-nowrap">
                             {product?.discount! > 0 &&
                               formatCurrency({
-                                price:
-                                  (size?.price! / 100) * product?.discount!,
+                                price: size?.price!,
                               })}
                           </span>
                           <h1 className="text-sm font-bold text-red-500">
@@ -641,11 +731,11 @@ const OrderDetail: NextPage<{ order: Order; user: User }> = ({
                     <h1 className="text-sm text-gray-400">
                       Địa chỉ nhận hàng :
                     </h1>
-                    <span className="text-sm text-black">{`${user?.address?.street} , ${user?.address?.wardName} , ${user?.address?.districtName} , ${user?.address?.provinceName}`}</span>
+                    <span className="text-sm text-black">{`${order?.user?.address?.street} , ${order?.user?.address?.wardName} , ${order?.user?.address?.districtName} , ${order?.user?.address?.provinceName}`}</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <h1 className="text-sm text-gray-400">Tên người nhận:</h1>
-                    <span className="text-sm text-black">{`${user?.name}`}</span>
+                    <span className="text-sm text-black">{`${order?.user?.name}`}</span>
                   </div>
                 </div>
                 <div className="flex flex-col">

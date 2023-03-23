@@ -264,11 +264,17 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
 
   return (
     <Layout>
-      <div className="grid grid-cols-9 m-40 gap-6">
-        <Navigation user={user} />
+      <div
+        className={`${
+          session?.user.id !== user?.id && "place-items-center"
+        } grid grid-cols-9 m-40 gap-6`}
+      >
+        {session?.user.id === user?.id && <Navigation user={user} />}
         <form
           onSubmit={handleSubmit}
-          className="col-span-7 flex flex-col  space-y-4 p-8 rounded-lg"
+          className={`${
+            session?.user.id === user?.id ? "col-span-7" : "col-span-9"
+          } flex flex-col  space-y-4 p-8 rounded-lg`}
         >
           <div className="flex justify-center items-center">
             {status === "authenticated" && session?.user?.id === user?.id ? (
@@ -431,152 +437,165 @@ const Profile: NextPage<{ user: User }> = ({ user }) => {
               </div>
             ) : (
               <h1 className="text-black">
-                {phone ? phone : "Chưa có số điện thoại"}
+                {phone ? `${phone.slice(0,6)}******` : "Chưa có số điện thoại"}
               </h1>
             )}
           </div>
 
           <div className="flex flex-col space-y-2 lg:text-base text-sm rounded-lg">
-            <div className="grid grid-cols-2 gap-2">
-              <div className="flex flex-col space-y-2">
-                <label htmlFor="address" className="font-semibold">
-                  Thành phố
-                </label>
-                <select
-                  value={JSON.stringify({
-                    provinceId,
-                    provinceName,
-                  })}
-                  onChange={async ({ target }) => {
-                    const json = JSON.parse(target.value);
-                    const { data } = await getDistrict({
-                      provinceId: json.provinceId!,
-                    });
-                    setState({
-                      ...state,
-                      provinceId: json.provinceId!,
-                      provinceName: json.provinceName,
-                      listDistrict: data,
-                    });
-                  }}
-                  className="border px-4 py-2 outline-none rounded-lg"
-                >
-                  <option value={""} hidden>
-                    Chọn thành phố
-                  </option>
-                  {listProvince?.map((province) => (
-                    <option
-                      key={province.ProvinceID}
-                      value={JSON.stringify({
-                        provinceId: province.ProvinceID,
-                        provinceName: province.ProvinceName,
-                      })}
-                    >
-                      {province.ProvinceName}
+            {session?.user?.id === user.id ? (
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex flex-col space-y-2">
+                  <label htmlFor="address" className="font-semibold">
+                    Thành phố
+                  </label>
+                  <select
+                    value={JSON.stringify({
+                      provinceId,
+                      provinceName,
+                    })}
+                    onChange={async ({ target }) => {
+                      const json = JSON.parse(target.value);
+                      const { data } = await getDistrict({
+                        provinceId: json.provinceId!,
+                      });
+                      setState({
+                        ...state,
+                        provinceId: json.provinceId!,
+                        provinceName: json.provinceName,
+                        listDistrict: data,
+                      });
+                    }}
+                    className="border px-4 py-2 outline-none rounded-lg"
+                  >
+                    <option value={""} hidden>
+                      Chọn thành phố
                     </option>
-                  ))}
-                </select>
-              </div>
+                    {listProvince?.map((province) => (
+                      <option
+                        key={province.ProvinceID}
+                        value={JSON.stringify({
+                          provinceId: province.ProvinceID,
+                          provinceName: province.ProvinceName,
+                        })}
+                      >
+                        {province.ProvinceName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              <div className="flex flex-col space-y-2">
-                <label htmlFor="address" className="font-semibold">
-                  Quận
-                </label>
-                <select
-                  value={JSON.stringify({
-                    districtId,
-                    districtName,
-                  })}
-                  disabled={listDistrict?.length === 0}
-                  onChange={async ({ target }) => {
-                    const json = JSON.parse(target?.value!);
-                    const { data } = await getWard({
-                      districtId: json.districtId!,
-                    });
-                    setState({
-                      ...state,
-                      districtId: json.districtId,
-                      districtName: json.districtName!,
-                      listWard: data,
-                    });
-                  }}
-                  className={`${
-                    !provinceId && "bg-gray-200 cursor-not-allowed"
-                  } border px-4 py-2 outline-none rounded-lg`}
-                >
-                  <option value={""} hidden>
-                    Chọn quận
-                  </option>
-                  {listDistrict?.map((district) => (
-                    <option
-                      key={district.DistrictID}
-                      value={JSON?.stringify({
-                        districtId: district.DistrictID!,
-                        districtName: district.DistrictName!,
-                      })}
-                    >
-                      {district.DistrictName}
+                <div className="flex flex-col space-y-2">
+                  <label htmlFor="address" className="font-semibold">
+                    Quận
+                  </label>
+                  <select
+                    value={JSON.stringify({
+                      districtId,
+                      districtName,
+                    })}
+                    disabled={listDistrict?.length === 0}
+                    onChange={async ({ target }) => {
+                      const json = JSON.parse(target?.value!);
+                      const { data } = await getWard({
+                        districtId: json.districtId!,
+                      });
+                      setState({
+                        ...state,
+                        districtId: json.districtId,
+                        districtName: json.districtName!,
+                        listWard: data,
+                      });
+                    }}
+                    className={`${
+                      !provinceId && "bg-gray-200 cursor-not-allowed"
+                    } border px-4 py-2 outline-none rounded-lg`}
+                  >
+                    <option value={""} hidden>
+                      Chọn quận
                     </option>
-                  ))}
-                </select>
-              </div>
+                    {listDistrict?.map((district) => (
+                      <option
+                        key={district.DistrictID}
+                        value={JSON?.stringify({
+                          districtId: district.DistrictID!,
+                          districtName: district.DistrictName!,
+                        })}
+                      >
+                        {district.DistrictName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              <div className="flex flex-col space-y-2">
-                <label htmlFor="address" className="font-semibold">
-                  Phường / xã
-                </label>
-                <select
-                  disabled={listWard?.length === 0}
-                  onChange={({ target }) => {
-                    const json = JSON.parse(target.value!);
-                    setState({
-                      ...state,
-                      wardId: json.wardId,
-                      wardName: json.wardName,
-                    });
-                  }}
-                  value={JSON.stringify({
-                    wardId,
-                    wardName,
-                  })}
-                  className={`${
-                    !districtId! && "bg-gray-200 cursor-not-allowed"
-                  } border px-4 py-2 outline-none rounded-lg`}
-                >
-                  <option value={""} hidden>
-                    Chọn phường / xã
-                  </option>
-                  {listWard?.map((ward) => (
-                    <option
-                      key={ward.WardCode}
-                      value={JSON.stringify({
-                        wardId: +ward.WardCode!,
-                        wardName: ward.WardName!,
-                      })}
-                    >
-                      {ward.WardName}
+                <div className="flex flex-col space-y-2">
+                  <label htmlFor="address" className="font-semibold">
+                    Phường / xã
+                  </label>
+                  <select
+                    disabled={listWard?.length === 0}
+                    onChange={({ target }) => {
+                      const json = JSON.parse(target.value!);
+                      setState({
+                        ...state,
+                        wardId: json.wardId,
+                        wardName: json.wardName,
+                      });
+                    }}
+                    value={JSON.stringify({
+                      wardId,
+                      wardName,
+                    })}
+                    className={`${
+                      !districtId! && "bg-gray-200 cursor-not-allowed"
+                    } border px-4 py-2 outline-none rounded-lg`}
+                  >
+                    <option value={""} hidden>
+                      Chọn phường / xã
                     </option>
-                  ))}
-                </select>
-              </div>
+                    {listWard?.map((ward) => (
+                      <option
+                        key={ward.WardCode}
+                        value={JSON.stringify({
+                          wardId: +ward.WardCode!,
+                          wardName: ward.WardName!,
+                        })}
+                      >
+                        {ward.WardName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              <div className="flex flex-col space-y-2">
-                <label htmlFor="address" className="font-semibold">
-                  Đường / số nhà
-                </label>
-                <input
-                  disabled={wardId ? false : true}
-                  value={street}
-                  onChange={({ target }) =>
-                    setState({ ...state, street: target.value! })
-                  }
-                  type="text"
-                  className={`${
-                    !wardId! && "bg-gray-200 cursor-not-allowed"
-                  } border px-4 py-2 outline-none rounded-lg h-[37px]`}
-                />
+                <div className="flex flex-col space-y-2">
+                  <label htmlFor="address" className="font-semibold">
+                    Đường / số nhà
+                  </label>
+                  <input
+                    disabled={wardId ? false : true}
+                    value={street}
+                    onChange={({ target }) =>
+                      setState({ ...state, street: target.value! })
+                    }
+                    type="text"
+                    className={`${
+                      !wardId! && "bg-gray-200 cursor-not-allowed"
+                    } border px-4 py-2 outline-none rounded-lg h-[37px]`}
+                  />
+                </div>
               </div>
-            </div>
+            ) : (
+              <>
+                <label
+                  htmlFor="address"
+                  className="font-semibold first-letter:uppercase"
+                >
+                  Địa chỉ
+                </label>
+                <h1 id="address" className="text-black text-sm">{`${user?.address
+                  ?.districtName!} , ${user?.address?.provinceName}`}</h1>
+              </>
+            )}
           </div>
 
           <div className="flex flex-col w-1/2 space-y-2 lg:text-base text-sm">

@@ -166,6 +166,7 @@ var getOrderById = function (req, res) { return __awaiter(void 0, void 0, void 0
                                 select: {
                                     name: true,
                                     id: true,
+                                    address: true,
                                     image: {
                                         select: {
                                             url: true
@@ -194,7 +195,7 @@ var getOrderById = function (req, res) { return __awaiter(void 0, void 0, void 0
 }); };
 exports.getOrderById = getOrderById;
 var createOrder = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, totalPayment, transportFee, userId, products, id, foundOrder, id_1, error_4;
+    var _a, totalPayment, transportFee, userId, products, id, foundOrder, id_1, order, order, error_4;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
@@ -227,11 +228,14 @@ var createOrder = function (req, res) { return __awaiter(void 0, void 0, void 0,
                                     data: products
                                 }
                             }
+                        },
+                        select: {
+                            id: true
                         }
                     })];
             case 2:
-                _b.sent();
-                res.status(200).json({ message: "Đơn hàng đã tạo thành công", success: true });
+                order = _b.sent();
+                res.status(200).json({ message: "Đơn hàng đã tạo thành công", order: order, success: true });
                 return [3 /*break*/, 5];
             case 3: return [4 /*yield*/, prisma.order.create({
                     data: {
@@ -250,11 +254,14 @@ var createOrder = function (req, res) { return __awaiter(void 0, void 0, void 0,
                                 data: products
                             }
                         }
+                    },
+                    select: {
+                        id: true
                     }
                 })];
             case 4:
-                _b.sent();
-                res.status(200).json({ message: "Đơn hàng đã tạo thành công", success: true });
+                order = _b.sent();
+                res.status(200).json({ message: "Đơn hàng đã tạo thành công", order: order, success: true });
                 _b.label = 5;
             case 5: return [3 /*break*/, 7];
             case 6:
@@ -436,11 +443,11 @@ var createFourStatus = function (req, res) { return __awaiter(void 0, void 0, vo
 }); };
 exports.createFourStatus = createFourStatus;
 var createFiveStatus = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var orderId, error_11;
+    var orderId, order, error_11;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
-                _a.trys.push([0, 2, , 3]);
+                _a.trys.push([0, 3, , 4]);
                 orderId = req.params.orderId;
                 return [4 /*yield*/, prisma.status.create({
                         data: {
@@ -451,13 +458,58 @@ var createFiveStatus = function (req, res) { return __awaiter(void 0, void 0, vo
                     })];
             case 1:
                 _a.sent();
-                res.status(200).json({ message: "Cập nhật trạng thái thành công", success: true });
-                return [3 /*break*/, 3];
+                return [4 /*yield*/, prisma.order.findUnique({
+                        where: {
+                            id: +orderId
+                        },
+                        select: {
+                            products: {
+                                select: {
+                                    product: {
+                                        select: {
+                                            sold: true,
+                                            id: true
+                                        }
+                                    },
+                                    amount: true
+                                }
+                            }
+                        }
+                    })
+                    // Update sold amount
+                ];
             case 2:
+                order = _a.sent();
+                // Update sold amount
+                if (order) {
+                    order.products.map(function (_a) {
+                        var amount = _a.amount, product = _a.product;
+                        return __awaiter(void 0, void 0, void 0, function () {
+                            return __generator(this, function (_b) {
+                                switch (_b.label) {
+                                    case 0: return [4 /*yield*/, prisma.product.update({
+                                            where: {
+                                                id: product.id
+                                            },
+                                            data: {
+                                                sold: (product === null || product === void 0 ? void 0 : product.sold) + amount,
+                                            }
+                                        })];
+                                    case 1:
+                                        _b.sent();
+                                        return [2 /*return*/];
+                                }
+                            });
+                        });
+                    });
+                }
+                res.status(200).json({ message: "Cập nhật trạng thái thành công", success: true });
+                return [3 /*break*/, 4];
+            case 3:
                 error_11 = _a.sent();
                 res.status(500).json({ message: error_11.message, success: false });
-                return [3 /*break*/, 3];
-            case 3: return [2 /*return*/];
+                return [3 /*break*/, 4];
+            case 4: return [2 /*return*/];
         }
     });
 }); };

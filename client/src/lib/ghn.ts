@@ -33,11 +33,11 @@ export const getWard = async ({ districtId }: { districtId: number }) => {
 
 
 export const getServicePackage = async ({ toDistrictId }: { toDistrictId: number }) => {
-    const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_GHN_ENDPOINT}/v2/shipping-order/available-services?shop_id=${parseInt(process.env.NEXT_PUBLIC_API_GHN_SHOP_ID!)}&from_district=${parseInt(process.env.NEXT_PUBLIC_API_GHN_FROM_DISTRICT_ID!)}&to_district=${toDistrictId!}`, {
+    const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_GHN_ENDPOINT}/v2/shipping-order/available-services?shop_id=${parseInt(process.env.NEXT_PUBLIC_API_GHN_SHOP_ID!)}&from_district=${parseInt(process.env.NEXT_PUBLIC_API_GHN_FROM_DISTRICT_ID!)}&to_district=${toDistrictId!}`, {
         headers: {
             token: process.env.NEXT_PUBLIC_API_GHN_TOKEN
         }
-    } )
+    })
 
     return data
 }

@@ -2,9 +2,7 @@ import { sendEmail } from "@/lib/email";
 import { calculateFee, getServicePackage } from "@/lib/ghn";
 import { createOrder } from "@/lib/orders";
 import { getUserById } from "@/lib/users";
-import {
-  toggleBackdrop,
-} from "@/redux/features/isSlice";
+import { toggleBackdrop } from "@/redux/features/isSlice";
 import { setOrderModal } from "@/redux/features/orderSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import {
@@ -17,9 +15,9 @@ import { TransportMethod, User } from "@/utils/types";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import React, { useEffect,  useState } from "react";
+import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-import {  AiOutlinePlus } from "react-icons/ai";
+import { AiOutlinePlus } from "react-icons/ai";
 import { FaEdit } from "react-icons/fa";
 import { HiOutlineTruck } from "react-icons/hi";
 import { ImLocation } from "react-icons/im";
@@ -35,34 +33,28 @@ const OrderModal = () => {
   const { orderModal } = useAppSelector((state) => state.orderSlice);
   const [state, setState] = useState<{
     methodPayment: number;
-    methodTransportId: number | null;
-    methodTransportTypeId: number | null;
+    methodTransport: string;
     user: User | null;
     randomCode: number | null;
     transportFee: number | null;
-    methodTransportList: TransportMethod[];
     totalPriceProduct: number | null;
     totalPricePayment: number | null;
     totalDiscounted: number | null;
   }>({
     methodPayment: 0,
-    methodTransportId: null,
+    methodTransport: "",
     randomCode: null,
     transportFee: null,
-    methodTransportTypeId: null,
     totalPriceProduct: null,
     totalPricePayment: null,
     totalDiscounted: null,
     user: {},
-    methodTransportList: [],
   });
   const {
     user,
     methodPayment,
-    methodTransportList,
     randomCode,
-    methodTransportId,
-    methodTransportTypeId,
+    methodTransport,
     transportFee,
     totalPriceProduct,
     totalPricePayment,
@@ -74,39 +66,34 @@ const OrderModal = () => {
     getUserById({ id: session?.user?.id as string }).then(
       ({ user }: { user: User }) => {
         if (user.address) {
-          getServicePackage({ toDistrictId: user.address.districtId! }).then(
-            ({ data }) => {
-              setState({
-                ...state,
-                user,
-                methodTransportList: data,
-                totalDiscounted: cart
-                  .filter(({ isChecked }) => isChecked)
-                  .reduce(
-                    (acc, current) =>
-                      acc +
-                      formatDiscount({
-                        price: current.size?.price!,
-                        discount: current?.product?.discount!,
-                        amount: current?.amount!,
-                      }),
-                    0
-                  ),
-                totalPriceProduct: cart
-                  .filter(({ isChecked }) => isChecked)
-                  .reduce(
-                    (acc, current) =>
-                      acc +
-                      formatPriceWithDiscount({
-                        price: current?.size?.price!,
-                        discount: current?.product?.discount!,
-                        amount: current?.amount!,
-                      }),
-                    0
-                  ),
-              });
-            }
-          );
+          setState({
+            ...state,
+            user,
+            totalDiscounted: cart
+              .filter(({ isChecked }) => isChecked)
+              .reduce(
+                (acc, current) =>
+                  acc +
+                  formatDiscount({
+                    price: current.size?.price!,
+                    discount: current?.product?.discount!,
+                    amount: current?.amount!,
+                  }),
+                0
+              ),
+            totalPriceProduct: cart
+              .filter(({ isChecked }) => isChecked)
+              .reduce(
+                (acc, current) =>
+                  acc +
+                  formatPriceWithDiscount({
+                    price: current?.size?.price!,
+                    discount: current?.product?.discount!,
+                    amount: current?.amount!,
+                  }),
+                0
+              ),
+          });
         } else {
           setState({ ...state, user });
         }
@@ -119,26 +106,32 @@ const OrderModal = () => {
   // }, [methodPayment]);
 
   useEffect(() => {
-    if (user && methodTransportId) {
+    if (user && methodTransport) {
       calculateFee({
         amount: orderModal.cart.reduce(
           (acc, curr) => acc + curr?.amount!,
           0
         ) as number,
-        serviceId: methodTransportId!,
-        serviceTypeId: methodTransportTypeId!,
-        toDistrictId: user?.address?.districtId!,
-        toWardCode: user?.address?.wardId!,
-      }).then(({ data }) => {
-        setState({
-          ...state,
-          transportFee: data.total,
-          totalPricePayment:
-            Math.floor((+totalPriceProduct! + +data.total) / 1000) * 1000,
-        });
+        address: user?.address?.street!,
+        district: user?.address?.districtName!,
+        province: user?.address?.provinceName!,
+        ward: user?.address?.wardName!,
+        totalOrder: totalPriceProduct!,
+        deliverOption: methodTransport!,
+      }).then(({ success, message, fee }) => {
+        if (success) {
+          setState({
+            ...state,
+            transportFee: fee.fee,
+            totalPricePayment:
+              Math.floor((+totalPriceProduct! + +fee.fee) / 1000) * 1000,
+          });
+        } else {
+          toast.error(message);
+        }
       });
     }
-  }, [methodTransportId]);
+  }, [methodTransport]);
 
   const handleRedirectProfile = React.useCallback(() => {
     router.replace(`/profile?id=${session?.user?.id}`);
@@ -171,7 +164,7 @@ const OrderModal = () => {
         return;
       }
 
-      if (!methodTransportId) {
+      if (!methodTransport) {
         toast.error("Vui lòng chọn phương thức vận chuyển");
         return;
       }
@@ -202,7 +195,7 @@ const OrderModal = () => {
               cart: [],
             })
           );
-         await sendEmail({
+          await sendEmail({
             fromEmail: session?.user?.email as string,
             fromName: session?.user?.name as string,
             orderUrl: `${
@@ -211,7 +204,7 @@ const OrderModal = () => {
               "http://localhost:3000"
             }/orders/${order.id}`,
           });
-          router.replace(router.asPath)
+          router.replace(router.asPath);
           socket.emit("updateOrder");
         } else {
           toast.error("Đơn hàng đã tạo thất bại");
@@ -227,7 +220,7 @@ const OrderModal = () => {
     totalPricePayment,
     totalPriceProduct,
     user,
-    methodTransportId,
+    methodTransport,
   ]);
   return (
     <>
@@ -397,34 +390,16 @@ const OrderModal = () => {
 
             <select
               onChange={({ target }) =>
-                setState({
-                  ...state,
-                  methodTransportId: JSON.parse(target.value!)
-                    .methodTransportId,
-                  methodTransportTypeId: JSON.parse(target.value!)
-                    .methodTransportTypeId,
-                })
+                setState({ ...state, methodTransport: target.value! })
               }
-              value={JSON.stringify({
-                methodTransportId,
-                methodTransportTypeId,
-              })}
+              value={methodTransport}
               className="border outline-none px-4 py-3 rounded-lg w-1/2"
             >
               <option value="" hidden>
                 Chọn phương thức vận chuyển
               </option>
-              {methodTransportList.map((item) => (
-                <option
-                  key={item.service_id}
-                  value={JSON.stringify({
-                    methodTransportId: item.service_id,
-                    methodTransportTypeId: item.service_type_id,
-                  })}
-                >
-                  {item.short_name}
-                </option>
-              ))}
+              <option value="none">{"Truyển thống"}</option>
+              <option value="xteam">{"XFast"}</option>
             </select>
 
             <div className="px-2 border-b"></div>

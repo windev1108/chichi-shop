@@ -47,6 +47,7 @@ export const calculateFee = async ({ amount, deliverOption , totalOrder , addres
     const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_GHTK_ENDPOINT}/services/shipment/fee?address=${address}&province=${province}&district=${district}&ward=${ward}&pick_province=${process.env.NEXT_PUBLIC_API_GHTK_PICK_PROVINCE}&pick_district=${process.env.NEXT_PUBLIC_API_GHTK_PICK_DISTRICT}&pick_address=${process.env.NEXT_PUBLIC_API_GHTK_PICK_ADDRESS}&weight=${100 * amount}&value=${totalOrder}&deliver_option=${deliverOption}`, {
         headers: {
             Token: process.env.NEXT_PUBLIC_API_GHTK_TOKEN,
+            "Content-Type": "application/json"
         }
     })
     return data

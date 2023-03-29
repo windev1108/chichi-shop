@@ -95,6 +95,7 @@ const Home: NextPage<{
                       name={name as string}
                       discount={discount!}
                       price={sizeList[0].price!}
+                      sizeId={sizeList[0].id!}
                       sold={sold!}
                       averageRating={averageRating!}
                       review={_count?.reviews!}
@@ -135,6 +136,7 @@ const Home: NextPage<{
                       name={name as string}
                       discount={discount!}
                       price={sizeList[0].price!}
+                      sizeId={sizeList[0].id!}
                       sold={sold!}
                       averageRating={averageRating!}
                       review={_count?.reviews!}

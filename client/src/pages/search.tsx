@@ -1,7 +1,7 @@
 import Layout from "@/components/Layout";
 import { Product, Session } from "@/utils/types";
 import { GetServerSidePropsContext, NextPage } from "next";
-import { unstable_getServerSession as getServerSession } from "next-auth";
+import { getServerSession } from "next-auth";
 import React from "react";
 import { authOptions } from "./api/auth/[...nextauth]";
 import { getProductsByKeywords } from "@/lib/products";
@@ -86,6 +86,7 @@ const SearchProducts: NextPage<{
                   discount={discount!}
                   sold={sold!}
                   price={sizeList[0]?.price!}
+                  sizeId={sizeList[0].id!}
                   averageRating={averageRating!}
                   review={_count?.reviews!}
                 />

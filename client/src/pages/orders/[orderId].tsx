@@ -17,7 +17,7 @@ import { Order, User } from "@/utils/types";
 import { GetServerSidePropsContext, NextPage } from "next";
 import { getServerSession } from "next-auth";
 import Image from "next/image";
-import React, { useEffect } from "react";
+import React from "react";
 import { FaRegMoneyBillAlt } from "react-icons/fa";
 import { FcDown } from "react-icons/fc";
 import { MdCancel, MdPayments } from "react-icons/md";
@@ -27,15 +27,11 @@ import { HiInboxIn, HiOutlineTruck } from "react-icons/hi";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/router";
 import { BsBox } from "react-icons/bs";
-import { GrFormNext, GrFormPrevious } from "react-icons/gr";
 import {
   AiFillCopy,
-  AiOutlineFileDone,
   AiOutlineLoading3Quarters,
-  AiOutlineMessage,
-  AiOutlineStar,
 } from "react-icons/ai";
-import { RiLoader4Fill, RiTruckLine } from "react-icons/ri";
+import {  RiTruckLine } from "react-icons/ri";
 import { Socket, io } from "socket.io-client";
 import { TbInboxOff } from "react-icons/tb";
 import moment from "moment";

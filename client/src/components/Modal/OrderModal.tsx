@@ -273,7 +273,7 @@ const OrderModal = () => {
                   <h1 className="col-span-2 text-center">{item?.size?.name}</h1>
                   <h1 className="col-span-1 text-center">{item?.amount!}</h1>
                   <h1 className="col-span-2 text-center">
-                    {item?.size?.price!}
+                    {formatCurrency({price: item?.size?.price!})}
                   </h1>
                 </div>
               ))}

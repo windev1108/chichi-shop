@@ -22,7 +22,11 @@ import { getUserById } from "@/lib/users";
 import { toggleNavbarMobile, updateCart } from "@/redux/features/isSlice";
 import { clearCart } from "@/lib/cart";
 import { IoMdListBox } from "react-icons/io";
-import { formatCurrency } from "@/utils/constants";
+import {
+  formatCurrency,
+  formatCurrencyWithDiscount,
+  formatDiscount,
+} from "@/utils/constants";
 import { MdDeliveryDining, MdOutlineCancel } from "react-icons/md";
 import { BsBox } from "react-icons/bs";
 import { HiInboxIn } from "react-icons/hi";
@@ -248,7 +252,11 @@ const Header = () => {
                             className="relative flex justify-start text-sm items-center  hover:bg-gray-100 cursor-pointer p-2 h-24 border-b"
                           >
                             <div className="absolute top-0 right-3">
-                                <h1>{moment(item.createdAt).format("HH:mm DD/MM/yyyy")}</h1>
+                              <h1>
+                                {moment(item.createdAt).format(
+                                  "HH:mm DD/MM/yyyy"
+                                )}
+                              </h1>
                             </div>
                             <div className="flex flex-col">
                               <div className="flex w-full space-x-2 whitespace-nowrap">
@@ -308,7 +316,7 @@ const Header = () => {
                 <div className="group-hover:block hidden absolute top-[100%] right-0 after:absolute after:top-[-5%] after:right-0 after:left-0 after:h-4 after:bg-transparent ">
                   <div className="w-[28rem] border flex flex-col bg-white shadow-md max-h-[20rem] overflow-y-scroll scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-400">
                     <div className="flex justify-between px-4 items-center py-1 border-b-2">
-                    <Link
+                      <Link
                         href="/cart"
                         className="flex space-x-2 items-center cursor-pointer"
                       >
@@ -345,7 +353,7 @@ const Header = () => {
                               src={item?.product?.files[0].url!}
                               alt=""
                             />
-                            <h1 className="text-sm font-semibold">
+                            <h1 className="text-sm font-semibold truncate">
                               {item.product?.name as string}
                             </h1>
 
@@ -356,28 +364,18 @@ const Header = () => {
                               <h3 className="text-sm text-gray-400">{`SL :${item?.amount!}`}</h3>
                             </div>
                             <div className="items-center space-x-2 pr-2">
-                              <span className="text-gray-500 line-through lg:text-sm text-[13px] whitespace-nowrap">
-                                {item?.product?.discount! > 0 &&
-                                  currencyFormatter.format(+item.size?.price!, {
-                                    code: "VND",
+                              {+item.product?.discount! > 0 && (
+                                <span className="text-gray-500 line-through lg:text-sm text-[13px] whitespace-nowrap">
+                                  {formatCurrencyWithDiscount({
+                                    price: +item?.size?.price!,
+                                    discount: +item.product?.discount!,
                                   })}
-                              </span>
+                                </span>
+                              )}
                               <h1
                                 className={`text-sm font-bold text-red-500 pr-2`}
                               >
-                                {" "}
-                                {currencyFormatter.format(
-                                  Math.floor(
-                                    +(
-                                      +item.size?.price! -
-                                      (+item.size?.price! / 100) *
-                                        item?.product?.discount!
-                                    ) / 10000
-                                  ) * 10000,
-                                  {
-                                    code: "VND",
-                                  }
-                                )}
+                                {formatCurrency({ price: +item.size?.price! })}
                               </h1>
                             </div>
                           </Link>

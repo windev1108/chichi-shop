@@ -5,6 +5,12 @@ import { AiFillStar, AiOutlineStar } from "react-icons/ai";
 import { BiShoppingBag } from "react-icons/bi";
 import currencyFormatter from "currency-formatter";
 import Image from "next/image";
+import { toast } from "react-hot-toast";
+import { updateCart } from "@/redux/features/isSlice";
+import { useSession } from "next-auth/react";
+import { useAppDispatch } from "@/redux/hook";
+import { addProductToCart } from "@/lib/cart";
+import { BsFillCartPlusFill } from "react-icons/bs";
 const ProductItem: NextPage<{
   id: string;
   slug: string;
@@ -14,8 +20,10 @@ const ProductItem: NextPage<{
   discount: number;
   review: number;
   sold: number;
+  sizeId: string;
   averageRating: number;
 }> = ({
+  id,
   slug,
   image,
   price,
@@ -23,12 +31,41 @@ const ProductItem: NextPage<{
   name,
   sold,
   review,
+  sizeId,
   averageRating,
 }) => {
+  const { data: session } = useSession();
+  const dispatch = useAppDispatch();
 
- 
+  const handleAddToCart = React.useCallback(async () => {
+    try {
+      const { success, message } = await addProductToCart({
+        userId: session?.user?.id!,
+        productId: id,
+        amount: 1,
+        sizeId: sizeId,
+      });
+      if (success) {
+        toast.success(message);
+        dispatch(updateCart());
+      } else {
+        toast.error(message);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+
+    }
+  }, []);
+
   return (
     <div className="group hover:shadow-lg hover:-translate-y-1 shadow-md border overflow-hidden relative flex flex-col  h-fit cursor-pointer rounded-lg  transition-all duration-500">
+      <button
+        onClick={handleAddToCart}
+        title="Thêm vào giỏ hàng"
+        className="group-hover:translate-x-0 translate-x-[-100%] transition-all duration-500 ease-in-out absolute top-0 left-0 lg:w-12 w-10 lg:h-12 h-10 bg-gray-100 shadow  flex justify-center items-center"
+      >
+        <BsFillCartPlusFill className="text-xl text-green-500" />
+      </button>
       <Link href={`/products/${slug}`}>
         <>
           {discount > 0 && (
@@ -36,7 +73,8 @@ const ProductItem: NextPage<{
               <span className="font-semibold text-white">{`-${discount}%`}</span>
             </div>
           )}
-          <div className="h-[60%]">
+
+          <div className=" h-[60%]">
             {!image ? (
               <div className="w-full ! h-full bg-gray-200 animate-pulse"></div>
             ) : (
@@ -62,8 +100,7 @@ const ProductItem: NextPage<{
               >
                 {" "}
                 {currencyFormatter.format(
-                  Math.floor(+(price - (price / 100) * discount) / 1000) *
-                    1000,
+                  Math.floor(+(price - (price / 100) * discount) / 1000) * 1000,
                   {
                     code: "VND",
                   }

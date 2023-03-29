@@ -54,6 +54,7 @@ const ProductsList: NextPage<{
                   name={name as string}
                   discount={discount!}
                   sold={sold!}
+                  sizeId={sizeList[0].id!}
                   price={sizeList[0]?.price!}
                   averageRating={averageRating!}
                   review={_count?.reviews!}

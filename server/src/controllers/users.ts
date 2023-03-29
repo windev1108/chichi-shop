@@ -70,7 +70,7 @@ export const getUserById = async (req: Request, res: Response): Promise<any> => 
                                 price: true,
                             }
                         }
-                    }
+                    },
                 },
                 orders: {
                     include: {
@@ -144,9 +144,9 @@ export const getUserById = async (req: Request, res: Response): Promise<any> => 
                     }
                 }
             })
-            res.status(200).json({ user: { ...user, orders, cart: user?.cart.reverse() } })
+            res.status(200).json({ user: { ...user, orders , cart: user?.cart.reverse() } })
         } else {
-            res.status(200).json({ user: { ...user, cart: user?.cart.reverse() } })
+            res.status(200).json({ user: { ...user , cart: user?.cart.reverse() } })
         }
     } catch (error) {
         res.status(500).end()

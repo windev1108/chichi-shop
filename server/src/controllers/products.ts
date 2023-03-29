@@ -50,6 +50,7 @@ export const getProductByPage = async (req: Request, res: Response): Promise<any
                         price: "asc"
                     },
                     select: {
+                        id: true,
                         amount: true,
                         name: true,
                         price: true,
@@ -234,6 +235,8 @@ export const getProductsByKeyword = async (req: Request, res: Response): Promise
                 },
                 sizeList: {
                     select: {
+                        id: true,
+                        name: true,
                         price: true
                     },
                     take: 1,

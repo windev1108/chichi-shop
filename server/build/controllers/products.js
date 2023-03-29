@@ -112,6 +112,7 @@ var getProductByPage = function (req, res) { return __awaiter(void 0, void 0, vo
                                     price: "asc"
                                 },
                                 select: {
+                                    id: true,
                                     amount: true,
                                     name: true,
                                     price: true,
@@ -318,6 +319,8 @@ var getProductsByKeyword = function (req, res) { return __awaiter(void 0, void 0
                             },
                             sizeList: {
                                 select: {
+                                    id: true,
+                                    name: true,
                                     price: true
                                 },
                                 take: 1,

@@ -48,7 +48,7 @@ export const calculateFee = async ({ amount, deliverOption , totalOrder , addres
         headers: {
             Token: process.env.NEXT_PUBLIC_API_GHTK_TOKEN,
             "Access-Control-Allow-Origin": process.env.NEXT_PUBLIC_ORIGIN_URL,
-            "Referer": process.env.NEXT_PUBLIC_ORIGIN_URL,
+            "Referrer-Policy" : "strict-origin-when-cross-origin",
             "Content-Type": "application/json"
         }
     })

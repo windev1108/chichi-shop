@@ -39,6 +39,11 @@ const ProductItem: NextPage<{
 
   const handleAddToCart = React.useCallback(async () => {
     try {
+      if(!session?.user){
+        toast.error("Vui lòng đăng nhập")
+        return
+      }
+
       const { success, message } = await addProductToCart({
         userId: session?.user?.id!,
         productId: id,

@@ -79,6 +79,11 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
   const { amount, size, point, content } = state;
 
   const handleAddToCart = React.useCallback(async () => {
+    if (status !== "authenticated") {
+      toast.error("Vui lòng đăng nhập");
+      return;
+    }
+
     if (!amount) {
       toast.error("Vui lòng nhập số lượng");
       return;
@@ -88,13 +93,19 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
       toast.error("Số lượng của bạn lớn hơn số lượng tồn kho");
       return;
     }
-    await addProductToCart({
+
+    const { success, message } = await addProductToCart({
       userId: session?.user.id!,
       productId: product?.id as string,
       amount,
       sizeId: size?.id as string,
     });
-    dispatch(updateCart());
+    if (success) {
+      toast.success(message);
+      dispatch(updateCart());
+    } else {
+      toast.error(message);
+    }
   }, [amount, size]);
 
   const handleSubmitReview = React.useCallback(async () => {
@@ -122,7 +133,11 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
 
   const handleBuyNow = React.useCallback(async () => {
     try {
-      if(amount <= 0){
+      if (status !== "authenticated") {
+        toast.error("Vui lòng đăng nhập");
+        return;
+      }
+      if (amount <= 0) {
         toast.error("Vui lòng nhập số lượng sản phẩm");
         return;
       }
@@ -151,6 +166,7 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
       toast.error(error.message);
     }
   }, [amount, size, product]);
+
   return (
     <Layout>
       <div className="lg:px-40 px-4">
@@ -239,19 +255,21 @@ const ProductDetail: NextPage<{ product: Product }> = ({ product }) => {
               <div className="flex flex-col">
                 <span className=" text-black lg:text-base text-sm">
                   {`Mô tả sản phẩm :`}
-                  <h1 className="inline font-semibold text-sm">{product.name}</h1>
+                  <h1 className="inline font-semibold text-sm">
+                    {product.name}
+                  </h1>
                 </span>
                 <p className="text-sm whitespace-pre-wrap">
                   {formatTextRendering({ text: product?.descriptions })}
                 </p>
               </div>
             )}
-            {product?.sold &&
+            {product?.sold && (
               <div className="flex lg:space-x-4 space-x-2">
-                  <h1>Đã bán :</h1>
-                  <h1>{product?.sold!}</h1>
+                <h1>Đã bán :</h1>
+                <h1>{product?.sold!}</h1>
               </div>
-            }
+            )}
             <div className="flex items-center lg:py-10 py-2">
               <div className="h-10 flex flex-1">
                 <button
